@@ -239,6 +239,8 @@ AUTHENTICATION_BACKENDS = [
 ACCOUNT_ADAPTER = "accounts.adapters.PoinrouteAccountAdapter"
 SOCIALACCOUNT_ADAPTER = "accounts.adapters.PoinrouteSocialAccountAdapter"
 
+ACCOUNT_EMAIL_SUBJECT_PREFIX = ""
+
 # 중요:
 # 카카오는 이메일 권한이 없을 수 있으므로 allauth 로그인 기준을 email로 잡으면 안 된다.
 # 일반 로그인에서 보호 이메일/PIN 처리는 accounts 앱 view에서 직접 처리한다.
