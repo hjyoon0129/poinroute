@@ -17,8 +17,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://npmcdn.com/flatpickr/dist/themes/airbnb.css">
 
-    <link rel="stylesheet" href="{% static 'posts/posts.css' %}?v=20260505_pointshop_base_2">
-    <link rel="stylesheet" href="{% static 'posts/css/00_base.css' %}?v=20260505_pointshop_base_2">
+    <link rel="stylesheet" href="{% static 'posts/posts.css' %}?v=20260505_pointshop_base_3">
+    <link rel="stylesheet" href="{% static 'posts/css/00_base.css' %}?v=20260505_pointshop_base_3">
 
     {% block extra_css %}{% endblock %}
 
@@ -199,7 +199,139 @@
             box-shadow: 0 0 0 4px rgba(49, 87, 246, 0.12);
         }
 
-        @media (max-width: 520px) {
+        .poinroute-footer {
+            margin-top: 76px;
+            padding: 38px 18px 48px;
+            background: #ffffff;
+            border-top: 1px solid #e5eaf3;
+        }
+
+        .poinroute-footer-inner {
+            width: min(100%, 1120px);
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.4fr);
+            gap: 34px;
+            align-items: start;
+        }
+
+        .footer-brand-box strong {
+            display: inline-flex;
+            color: #3157f6;
+            font-size: 24px;
+            font-weight: 950;
+            letter-spacing: -0.07em;
+        }
+
+        .footer-brand-box p {
+            margin: 9px 0 0;
+            max-width: 320px;
+            color: #8a95a8;
+            font-size: 13px;
+            font-weight: 750;
+            line-height: 1.65;
+            word-break: keep-all;
+        }
+
+        .footer-company-note {
+            margin-top: 18px;
+            color: #98a2b3;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.7;
+            word-break: keep-all;
+        }
+
+        .footer-company-note button {
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #667085;
+            font-size: 12px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .footer-company-detail {
+            display: none;
+            margin-top: 10px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: #f8faff;
+            border: 1px solid #e5eaf3;
+            color: #667085;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.75;
+        }
+
+        .footer-company-detail.is-open {
+            display: block;
+        }
+
+        .footer-link-area {
+            display: grid;
+            gap: 16px;
+            justify-items: end;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: flex-end;
+            gap: 11px 18px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: #667085;
+            font-size: 13px;
+            font-weight: 850;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .footer-links a:hover {
+            color: #3157f6;
+            text-decoration: underline;
+        }
+
+        .footer-links a.strong {
+            color: #111827;
+            font-weight: 950;
+        }
+
+        .footer-cs-box {
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: #f8faff;
+            border: 1px solid #e5eaf3;
+            text-align: right;
+        }
+
+        .footer-cs-box strong {
+            display: block;
+            color: #111827;
+            font-size: 13px;
+            font-weight: 950;
+        }
+
+        .footer-cs-box p {
+            margin: 5px 0 0;
+            color: #667085;
+            font-size: 12px;
+            font-weight: 750;
+            line-height: 1.55;
+        }
+
+        .footer-copyright {
+            margin-top: 18px;
+            color: #a0a8b8;
+            font-size: 12px;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        @media (max-width: 760px) {
             .review-modal-card {
                 padding: 28px 20px 24px;
                 border-radius: 24px;
@@ -221,6 +353,43 @@
 
             .review-modal-button {
                 padding: 0 18px;
+            }
+
+            .poinroute-footer {
+                margin-top: 52px;
+                padding: 30px 16px 88px;
+            }
+
+            .poinroute-footer-inner {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .footer-brand-box p {
+                max-width: none;
+            }
+
+            .footer-link-area {
+                justify-items: start;
+            }
+
+            .footer-links {
+                justify-content: flex-start;
+                gap: 10px 14px;
+            }
+
+            .footer-links a {
+                font-size: 12px;
+            }
+
+            .footer-cs-box {
+                width: 100%;
+                text-align: left;
+                box-sizing: border-box;
+            }
+
+            .footer-copyright {
+                text-align: left;
             }
         }
     </style>
@@ -399,6 +568,53 @@
     <main class="container">
         {% block content %}{% endblock %}
     </main>
+
+    <footer class="poinroute-footer">
+        <div class="poinroute-footer-inner">
+            <div class="footer-brand-box">
+                <strong>포인루트</strong>
+                <p>
+                    여행 루트를 공유하고, 나만의 코스를 발견하는 여행 커뮤니티입니다.
+                </p>
+
+                <div class="footer-company-note">
+                    <button type="button" id="footerCompanyToggle">
+                        포인루트 사업자정보 ▾
+                    </button>
+
+                    <div class="footer-company-detail" id="footerCompanyDetail">
+                        서비스명: 포인루트<br>
+                        도메인: poinroute.com<br>
+                        운영 형태: 여행 루트 공유 커뮤니티<br>
+                        사업자 정보: 업데이트 예정<br>
+                        통신판매업 신고: 업데이트 예정
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-link-area">
+                <nav class="footer-links">
+                    <a href="{% url 'support:terms' %}">서비스 이용약관</a>
+                    <a href="{% url 'support:privacy' %}" class="strong">개인정보처리방침</a>
+                    <a href="{% url 'support:location' %}">위치기반서비스 이용약관</a>
+                    <a href="{% url 'support:points' %}">포인트/쿠폰 정책</a>
+                    <a href="{% url 'support:company' %}">사업자정보</a>
+                    <a href="{% url 'support:contact' %}">고객센터</a>
+                </nav>
+
+                <div class="footer-cs-box">
+                    <strong>고객센터</strong>
+                    <p>
+                        서비스 문의, 게시물 신고, 포인트/쿠폰 문의는 고객센터를 통해 접수해주세요.
+                    </p>
+                </div>
+
+                <div class="footer-copyright">
+                    © Poinroute. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
 
     {% if user.is_authenticated and not user.profile.nickname %}
     <div class="nickname-modal-backdrop" id="nicknameModal">
@@ -606,37 +822,47 @@
     </div>
     {% endif %}
 
-    <script src="{% static 'posts/posts.js' %}?v=20260505_pointshop_base_2"></script>
+    <script src="{% static 'posts/posts.js' %}?v=20260505_pointshop_base_3"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const profileMenu = document.getElementById("prProfileMenu");
             const profileTrigger = document.getElementById("prProfileTrigger");
 
-            if (!profileMenu || !profileTrigger) {
-                return;
+            if (profileMenu && profileTrigger) {
+                profileTrigger.addEventListener("click", function (event) {
+                    event.stopPropagation();
+
+                    const isOpen = profileMenu.classList.toggle("is-open");
+                    profileTrigger.setAttribute("aria-expanded", isOpen ? "true" : "false");
+                });
+
+                document.addEventListener("click", function (event) {
+                    if (!profileMenu.contains(event.target)) {
+                        profileMenu.classList.remove("is-open");
+                        profileTrigger.setAttribute("aria-expanded", "false");
+                    }
+                });
+
+                document.addEventListener("keydown", function (event) {
+                    if (event.key === "Escape") {
+                        profileMenu.classList.remove("is-open");
+                        profileTrigger.setAttribute("aria-expanded", "false");
+                    }
+                });
             }
 
-            profileTrigger.addEventListener("click", function (event) {
-                event.stopPropagation();
+            const footerCompanyToggle = document.getElementById("footerCompanyToggle");
+            const footerCompanyDetail = document.getElementById("footerCompanyDetail");
 
-                const isOpen = profileMenu.classList.toggle("is-open");
-                profileTrigger.setAttribute("aria-expanded", isOpen ? "true" : "false");
-            });
-
-            document.addEventListener("click", function (event) {
-                if (!profileMenu.contains(event.target)) {
-                    profileMenu.classList.remove("is-open");
-                    profileTrigger.setAttribute("aria-expanded", "false");
-                }
-            });
-
-            document.addEventListener("keydown", function (event) {
-                if (event.key === "Escape") {
-                    profileMenu.classList.remove("is-open");
-                    profileTrigger.setAttribute("aria-expanded", "false");
-                }
-            });
+            if (footerCompanyToggle && footerCompanyDetail) {
+                footerCompanyToggle.addEventListener("click", function () {
+                    footerCompanyDetail.classList.toggle("is-open");
+                    footerCompanyToggle.textContent = footerCompanyDetail.classList.contains("is-open")
+                        ? "포인루트 사업자정보 ▴"
+                        : "포인루트 사업자정보 ▾";
+                });
+            }
         });
     </script>
 

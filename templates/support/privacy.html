@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="policy-page">
+    <a href="{% url 'support:home' %}" class="policy-back">← 고객지원으로</a>
+
+    <article class="policy-card">
+        <h1>개인정보처리방침</h1>
+        <p class="policy-updated">시행일: 2026년 5월 5일</p>
+
+        <section class="policy-section">
+            <h2>1. 수집하는 개인정보</h2>
+            <ul>
+                <li>회원가입 정보: 아이디, 닉네임, 보호 이메일, PIN 정보</li>
+                <li>소셜 로그인 정보: 소셜 계정 식별자, 이메일, 프로필 정보</li>
+                <li>서비스 이용 정보: 게시글, 댓글, 리뷰, 추천, 조회 기록</li>
+                <li>포인트샵 이용 정보: 쿠폰 신청 내역, 수령 이메일, 처리 상태</li>
+                <li>접속 정보: IP 주소, 접속 시간, 브라우저 정보</li>
+            </ul>
+        </section>
+
+        <section class="policy-section">
+            <h2>2. 개인정보 이용 목적</h2>
+            <ul>
+                <li>회원 식별 및 로그인 처리</li>
+                <li>여행 루트 작성, 커뮤니티 이용, 루트 의뢰 기능 제공</li>
+                <li>포인트 적립, 쿠폰 신청, 보상 지급 처리</li>
+                <li>부정 이용 방지 및 서비스 안정성 확보</li>
+                <li>고객 문의 응대 및 공지 전달</li>
+            </ul>
+        </section>
+
+        <section class="policy-section">
+            <h2>3. 보관 기간</h2>
+            <p>
+                개인정보는 회원 탈퇴 또는 수집 목적 달성 시 지체 없이 파기합니다.
+                다만 관계 법령 또는 분쟁 대응을 위해 필요한 정보는 일정 기간 보관될 수 있습니다.
+            </p>
+        </section>
+
+        <section class="policy-section">
+            <h2>4. 제3자 제공</h2>
+            <p>
+                포인루트는 이용자의 동의 없이 개인정보를 외부에 제공하지 않습니다.
+                다만 법령에 따른 요청이 있는 경우 예외적으로 제공될 수 있습니다.
+            </p>
+        </section>
+
+        <section class="policy-section">
+            <h2>5. 개인정보 처리 위탁</h2>
+            <p>
+                서비스 운영을 위해 이메일 발송, 데이터베이스, 서버, 소셜 로그인 등 외부 서비스를 사용할 수 있습니다.
+                구체적인 위탁 업체 정보는 서비스 운영 상황에 따라 업데이트됩니다.
+            </p>
+        </section>
+
+        <section class="policy-section">
+            <h2>6. 이용자의 권리</h2>
+            <p>
+                이용자는 자신의 개인정보 조회, 수정, 삭제, 처리 정지를 요청할 수 있습니다.
+                요청은 고객센터를 통해 접수할 수 있습니다.
+            </p>
+        </section>
+
+        <section class="policy-section">
+            <h2>7. 개인정보 보호 문의</h2>
+            <p>
+                개인정보 관련 문의는 고객센터 페이지의 이메일을 통해 접수할 수 있습니다.
+            </p>
+        </section>
+
+        <div class="policy-notice">
+            실제 운영 전에는 사업자 정보, 개인정보 보호책임자, 위탁 업체, 보관 기간을 확정해 보완하는 것을 권장합니다.
+        </div>
+    </article>
+</section>
+
+{% include 'support/support_style.html' %}
+{% endblock %}

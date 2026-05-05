@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="policy-page">
+    <a href="{% url 'support:home' %}" class="policy-back">← 고객지원으로</a>
+
+    <article class="policy-card">
+        <h1>사업자 정보</h1>
+        <p class="policy-updated">최종 업데이트: 2026년 5월 5일</p>
+
+        <section class="policy-section">
+            <h2>서비스 정보</h2>
+
+            <div class="contact-box">
+                <div class="contact-row">
+                    <strong>서비스명</strong>
+                    <span>포인루트</span>
+                </div>
+
+                <div class="contact-row">
+                    <strong>도메인</strong>
+                    <span>poinroute.com</span>
+                </div>
+
+                <div class="contact-row">
+                    <strong>운영 형태</strong>
+                    <span>여행 루트 공유 커뮤니티</span>
+                </div>
+
+                <div class="contact-row">
+                    <strong>사업자 정보</strong>
+                    <span>업데이트 예정</span>
+                </div>
+
+                <div class="contact-row">
+                    <strong>통신판매업 신고</strong>
+                    <span>업데이트 예정</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="policy-section">
+            <h2>안내</h2>
+            <p>
+                현재 포인루트는 초기 서비스 검증 단계입니다.
+                유료 판매, 제휴 쿠폰 판매, 광고 상품 운영 등 상업 기능이 본격화되면 사업자 정보와 통신판매 관련 정보를 업데이트합니다.
+            </p>
+        </section>
+    </article>
+</section>
+
+{% include 'support/support_style.html' %}
+{% endblock %}

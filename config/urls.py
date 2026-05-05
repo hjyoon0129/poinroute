@@ -8,17 +8,14 @@ urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
 
     path("", include("posts.urls")),
-
     path("auth/", include("accounts.urls")),
-
-    # django-allauth social login
     path("accounts/", include("allauth.urls")),
 
-    path("points/", include("points.urls")),
     path("community/", include("community.urls")),
+    path("points/", include("points.urls")),
     path("auctions/", include("auctions.urls")),
+    path("support/", include("support.urls")),
 ]
-
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -97,8 +97,8 @@ INSTALLED_APPS = [
     "auctions",
     "trades",
     "community",
+    "support",
 ]
-
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

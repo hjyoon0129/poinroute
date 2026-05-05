@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="policy-page">
+    <a href="{% url 'support:home' %}" class="policy-back">← 고객지원으로</a>
+
+    <article class="policy-card">
+        <h1>서비스 이용약관</h1>
+        <p class="policy-updated">시행일: 2026년 5월 5일</p>
+
+        <section class="policy-section">
+            <h2>제1조 목적</h2>
+            <p>
+                본 약관은 포인루트가 제공하는 여행 루트 공유, 커뮤니티, 루트 의뢰, 포인트샵 등 서비스의 이용 조건과 절차,
+                회원과 서비스 운영자 간의 권리와 의무를 정하는 것을 목적으로 합니다.
+            </p>
+        </section>
+
+        <section class="policy-section">
+            <h2>제2조 서비스 내용</h2>
+            <ul>
+                <li>여행 루트 작성, 조회, 검색, 공유 기능</li>
+                <li>커뮤니티 게시글 및 댓글 기능</li>
+                <li>루트 의뢰 및 참여 기능</li>
+                <li>포인트 적립, 사용, 쿠폰 신청 기능</li>
+                <li>기타 운영자가 추가로 제공하는 서비스</li>
+            </ul>
+        </section>
+
+        <section class="policy-section">
+            <h2>제3조 회원가입 및 계정</h2>
+            <p>
+                회원은 소셜 로그인 또는 일반 가입을 통해 서비스를 이용할 수 있습니다.
+                회원은 본인의 계정 정보를 안전하게 관리해야 하며, 계정 사용으로 발생하는 책임은 회원에게 있습니다.
+            </p>
+        </section>
+
+        <section class="policy-section">
+            <h2>제4조 금지행위</h2>
+            <ul>
+                <li>타인의 권리, 명예, 개인정보를 침해하는 행위</li>
+                <li>허위 정보, 불법 정보, 광고성 게시물을 작성하는 행위</li>
+                <li>서비스 운영을 방해하거나 시스템을 비정상적으로 이용하는 행위</li>
+                <li>포인트, 쿠폰, 보상 시스템을 부정하게 이용하는 행위</li>
+            </ul>
+        </section>
+
+        <section class="policy-section">
+            <h2>제5조 게시물 관리</h2>
+            <p>
+                운영자는 서비스 품질 유지와 이용자 보호를 위해 게시물을 검수할 수 있으며,
+                부적절한 게시물은 노출 제한, 수정 요청, 삭제 처리될 수 있습니다.
+            </p>
+        </section>
+
+        <section class="policy-section">
+            <h2>제6조 서비스 변경 및 중단</h2>
+            <p>
+                운영자는 서비스 개선, 점검, 정책 변경 등의 사유로 서비스의 일부 또는 전부를 변경하거나 일시 중단할 수 있습니다.
+            </p>
+        </section>
+
+        <section class="policy-section">
+            <h2>제7조 책임 제한</h2>
+            <p>
+                포인루트의 여행 루트와 장소 정보는 사용자가 작성한 정보를 기반으로 하며,
+                실제 운영시간, 가격, 교통상황, 안전상황 등은 변동될 수 있습니다.
+                이용자는 여행 전 직접 확인해야 합니다.
+            </p>
+        </section>
+
+        <div class="policy-notice">
+            본 약관은 초기 서비스 운영을 위한 기본 문서입니다. 실제 사업자 등록, 유료 기능, 광고, 쿠폰 지급 방식이 확정되면
+            세부 조항을 보완할 수 있습니다.
+        </div>
+    </article>
+</section>
+
+{% include 'support/support_style.html' %}
+{% endblock %}

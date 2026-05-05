@@ -82,6 +82,25 @@ def _extract_number_from_keyword(keyword):
     return _to_positive_int(match.group(0))
 
 
+def _public_visible_statuses():
+    """
+    비로그인 사용자도 메인 '실시간 추천 루트'에서 볼 수 있는 상태.
+
+    초기 서비스는 콘텐츠가 비어 보이면 전환이 떨어지므로
+    승인완료 + 검수중 루트까지 목록/상세 노출한다.
+
+    단, 추천/리뷰/포인트 지급은 여전히 승인완료 기준으로 제한하는 게 안전하다.
+    """
+    statuses = [Post.ReviewStatus.APPROVED]
+
+    pending_status = getattr(Post.ReviewStatus, "PENDING", None)
+
+    if pending_status:
+        statuses.append(pending_status)
+
+    return statuses
+
+
 def _can_edit_post(user, post):
     if not user.is_authenticated:
         return False
@@ -93,7 +112,7 @@ def _can_edit_post(user, post):
 
 
 def _can_view_post(user, post):
-    if post.review_status == Post.ReviewStatus.APPROVED:
+    if post.review_status in _public_visible_statuses():
         return True
 
     if not user.is_authenticated:
@@ -159,14 +178,18 @@ def post_list(request):
         .annotate(likes_total=Count("likes", distinct=True))
     )
 
+    public_filter = Q(review_status__in=_public_visible_statuses())
+
     if request.user.is_authenticated:
-        if not request.user.is_staff and not request.user.is_superuser:
+        if request.user.is_staff or request.user.is_superuser:
+            pass
+        else:
             posts = posts.filter(
-                Q(review_status=Post.ReviewStatus.APPROVED) |
+                public_filter |
                 Q(author=request.user)
             )
     else:
-        posts = posts.filter(review_status=Post.ReviewStatus.APPROVED)
+        posts = posts.filter(public_filter)
 
     if search_reg:
         posts = posts.filter(start_region=search_reg)
@@ -237,6 +260,7 @@ def post_detail(request, pk):
     post = get_object_or_404(
         Post.objects
         .select_related("author", "author__profile")
+        .prefetch_related("places")
         .annotate(likes_total=Count("likes", distinct=True)),
         pk=pk,
     )
@@ -286,7 +310,7 @@ def post_like(request, pk):
     post = get_object_or_404(Post, pk=pk)
 
     if post.review_status != Post.ReviewStatus.APPROVED:
-        messages.error(request, "아직 승인되지 않은 루트는 추천할 수 없습니다.")
+        messages.error(request, "승인된 루트만 추천할 수 있습니다.")
         return redirect("posts:detail", pk=post.pk)
 
     ip_address = _get_client_ip(request)

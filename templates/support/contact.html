@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="policy-page">
+    <a href="{% url 'support:home' %}" class="policy-back">← 고객지원으로</a>
+
+    <article class="policy-card">
+        <h1>고객센터</h1>
+        <p class="policy-updated">문의는 순차적으로 확인 후 답변드립니다.</p>
+
+        <section class="policy-section">
+            <h2>문의 안내</h2>
+            <p>
+                서비스 이용 문의, 게시물 신고, 포인트/쿠폰 지급 문의, 제휴 문의는 아래 이메일로 접수해주세요.
+            </p>
+
+            <div class="contact-box">
+                <div class="contact-row">
+                    <strong>일반 문의</strong>
+                    <span>poinroute@gmail.com</span>
+                </div>
+
+                <div class="contact-row">
+                    <strong>포인트/쿠폰 문의</strong>
+                    <span>poinroute@gmail.com</span>
+                </div>
+
+                <div class="contact-row">
+                    <strong>게시물 신고</strong>
+                    <span>poinroute@gmail.com</span>
+                </div>
+
+                <div class="contact-row">
+                    <strong>제휴 문의</strong>
+                    <span>poinroute@gmail.com</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="policy-section">
+            <h2>문의 시 포함하면 좋은 정보</h2>
+            <ul>
+                <li>가입 이메일 또는 닉네임</li>
+                <li>문제가 발생한 페이지 주소</li>
+                <li>문제 발생 시간</li>
+                <li>화면 캡처 이미지</li>
+                <li>포인트/쿠폰 문의의 경우 신청 상품명</li>
+            </ul>
+        </section>
+
+        <section class="policy-section">
+            <h2>처리 시간</h2>
+            <p>
+                문의는 보통 영업일 기준 1~3일 이내 확인을 목표로 합니다.
+                초기 운영 단계에서는 답변이 다소 지연될 수 있습니다.
+            </p>
+        </section>
+    </article>
+</section>
+
+{% include 'support/support_style.html' %}
+{% endblock %}

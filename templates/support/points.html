@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="policy-page">
+    <a href="{% url 'support:home' %}" class="policy-back">← 고객지원으로</a>
+
+    <article class="policy-card">
+        <h1>포인트/쿠폰 운영정책</h1>
+        <p class="policy-updated">시행일: 2026년 5월 5일</p>
+
+        <section class="policy-section">
+            <h2>1. 포인트 적립</h2>
+            <ul>
+                <li>여행 루트 등록, 검수 승인, 이벤트 참여 등을 통해 포인트가 지급될 수 있습니다.</li>
+                <li>광고 보상형 포인트는 운영 기준에 따라 지급 횟수와 금액이 제한될 수 있습니다.</li>
+                <li>부정 참여, 중복 참여, 자동화 프로그램 이용 시 포인트가 회수될 수 있습니다.</li>
+            </ul>
+        </section>
+
+        <section class="policy-section">
+            <h2>2. 포인트 사용</h2>
+            <ul>
+                <li>포인트는 포인트샵에서 쿠폰 신청 등에 사용할 수 있습니다.</li>
+                <li>쿠폰 신청 시 해당 포인트가 즉시 차감됩니다.</li>
+                <li>신청이 반려되는 경우 차감된 포인트는 자동 환불될 수 있습니다.</li>
+            </ul>
+        </section>
+
+        <section class="policy-section">
+            <h2>3. 쿠폰 지급</h2>
+            <ul>
+                <li>쿠폰은 관리자의 확인 후 입력한 이메일로 발송될 수 있습니다.</li>
+                <li>쿠폰 재고, 운영 상황, 제휴 상태에 따라 지급이 지연되거나 반려될 수 있습니다.</li>
+                <li>잘못된 이메일 입력으로 인한 미수령 책임은 이용자에게 있을 수 있습니다.</li>
+            </ul>
+        </section>
+
+        <section class="policy-section">
+            <h2>4. 포인트 소멸 및 제한</h2>
+            <p>
+                장기간 미사용 계정, 부정 이용 계정, 운영정책 위반 계정의 포인트는 제한 또는 회수될 수 있습니다.
+                구체적인 소멸 기준은 추후 공지할 수 있습니다.
+            </p>
+        </section>
+
+        <section class="policy-section">
+            <h2>5. 유의사항</h2>
+            <p>
+                포인트는 현금이 아니며, 현금으로 환급되지 않습니다.
+                포인트샵 상품 구성과 필요 포인트는 운영 상황에 따라 변경될 수 있습니다.
+            </p>
+        </section>
+    </article>
+</section>
+
+{% include 'support/support_style.html' %}
+{% endblock %}

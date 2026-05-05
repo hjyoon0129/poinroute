@@ -983,17 +983,18 @@
 
     @media (max-width: 768px) {
         .course-detail-shell {
-            padding: 22px 0 70px;
+            padding: 18px 0 18px;
             overflow-x: hidden;
         }
 
         .detail-top-actions {
             padding: 0 14px;
+            margin-bottom: 10px;
         }
 
         .detail-hero {
             padding: 0 16px;
-            margin-bottom: 18px;
+            margin-bottom: 14px;
         }
 
         .detail-title {
@@ -1011,13 +1012,15 @@
 
         .mobile-route-slider-shell {
             display: block;
-            margin-top: 18px;
+            margin-top: 14px;
+            margin-bottom: 0;
             width: 100%;
+            overflow: hidden;
         }
 
         .mobile-slide-hint {
             width: calc(100% - 32px);
-            margin: 0 auto 10px;
+            margin: 0 auto 8px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -1035,14 +1038,19 @@
         .mobile-route-slider {
             width: 100%;
             display: flex;
-            gap: 14px;
+            align-items: flex-start;
+            gap: 0;
             overflow-x: auto;
             overflow-y: hidden;
             scroll-snap-type: x mandatory;
-            scroll-padding-left: 16px;
-            padding: 0 16px 18px;
-            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: auto;
+            overscroll-behavior-x: contain;
+            padding: 0 0 8px;
             box-sizing: border-box;
+            scrollbar-width: none;
+            touch-action: pan-y;
+            transition: height 0.18s ease;
         }
 
         .mobile-route-slider::-webkit-scrollbar {
@@ -1051,13 +1059,18 @@
 
         .mobile-route-slide {
             flex: 0 0 100%;
-            scroll-snap-align: start;
+            width: 100%;
+            max-width: 100%;
             min-width: 0;
+            box-sizing: border-box;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            padding: 0 16px;
         }
 
         .mobile-slide-card {
             width: 100%;
-            min-height: 540px;
+            min-height: 0;
             padding: 18px;
             border-radius: 24px;
             background: #ffffff;
@@ -1067,22 +1080,22 @@
         }
 
         .mobile-map-slide-card {
-            min-height: 560px;
+            min-height: 0;
         }
 
         .mobile-detail-map {
-            height: 270px;
+            height: 250px;
             border-radius: 18px;
         }
 
         .mobile-flow-box {
-            margin-top: 16px;
-            padding-top: 15px;
+            margin-top: 14px;
+            padding-top: 14px;
             border-top: 1px solid #eef1f6;
         }
 
         .mobile-route-sequence {
-            max-height: 320px;
+            max-height: 300px;
             overflow-y: auto;
             padding-right: 4px;
         }
@@ -1140,7 +1153,7 @@
         }
 
         .mobile-review-slide-card {
-            min-height: 620px;
+            min-height: 0;
         }
 
         .mobile-review-slide-card .route-review-head {
@@ -1171,7 +1184,8 @@
             display: flex;
             justify-content: center;
             gap: 6px;
-            margin-top: 2px;
+            margin-top: 18px;
+            margin-bottom: 8px;
         }
 
         .mobile-slide-dot {
@@ -1181,6 +1195,7 @@
             border: 0;
             background: #cbd5e1;
             padding: 0;
+            cursor: pointer;
         }
 
         .mobile-slide-dot.is-active {
@@ -1217,44 +1232,199 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (slider && dotsBox) {
         const slides = Array.from(slider.querySelectorAll(".mobile-route-slide"));
+        let currentIndex = 0;
+        let startX = 0;
+        let startY = 0;
+        let isTouching = false;
+        let isHorizontalSwipe = false;
 
         dotsBox.innerHTML = "";
+
+        function getSlideLeft(index) {
+            const target = slides[index];
+
+            if (!target) {
+                return 0;
+            }
+
+            return target.offsetLeft - slider.offsetLeft;
+        }
+
+        function getClosestIndex() {
+            if (!slides.length) {
+                return 0;
+            }
+
+            let closestIndex = 0;
+            let closestDistance = Infinity;
+
+            slides.forEach(function (slide, index) {
+                const distance = Math.abs(slider.scrollLeft - getSlideLeft(index));
+
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestIndex = index;
+                }
+            });
+
+            return closestIndex;
+        }
+
+        function updateDots(index) {
+            const dots = Array.from(dotsBox.querySelectorAll(".mobile-slide-dot"));
+
+            dots.forEach(function (dot, dotIndex) {
+                dot.classList.toggle("is-active", dotIndex === index);
+            });
+        }
+
+        function updateSliderHeight(index) {
+            if (!slides.length) {
+                return;
+            }
+
+            const safeIndex = Math.max(0, Math.min(index, slides.length - 1));
+            const activeSlide = slides[safeIndex];
+            const activeCard = activeSlide ? activeSlide.querySelector(".mobile-slide-card") : null;
+
+            if (!activeCard) {
+                slider.style.height = "auto";
+                return;
+            }
+
+            const cardHeight = Math.ceil(activeCard.getBoundingClientRect().height);
+            slider.style.height = `${cardHeight + 8}px`;
+        }
+
+        function goToSlide(index, smooth) {
+            if (!slides.length) {
+                return;
+            }
+
+            const safeIndex = Math.max(0, Math.min(index, slides.length - 1));
+            currentIndex = safeIndex;
+
+            slider.scrollTo({
+                left: getSlideLeft(safeIndex),
+                behavior: smooth === false ? "auto" : "smooth"
+            });
+
+            updateDots(safeIndex);
+            updateSliderHeight(safeIndex);
+
+            setTimeout(function () {
+                updateSliderHeight(safeIndex);
+            }, 240);
+        }
 
         slides.forEach(function (_, index) {
             const dot = document.createElement("button");
             dot.type = "button";
             dot.className = "mobile-slide-dot";
+
             if (index === 0) {
                 dot.classList.add("is-active");
             }
 
             dot.addEventListener("click", function () {
-                const target = slides[index];
-                if (target) {
-                    slider.scrollTo({
-                        left: target.offsetLeft - slider.offsetLeft,
-                        behavior: "smooth"
-                    });
-                }
+                goToSlide(index, true);
             });
 
             dotsBox.appendChild(dot);
         });
 
-        const dots = Array.from(dotsBox.querySelectorAll(".mobile-slide-dot"));
+        slider.addEventListener("touchstart", function (event) {
+            if (!event.touches || !event.touches.length) {
+                return;
+            }
 
-        function updateDots() {
-            const slideWidth = slides[0] ? slides[0].offsetWidth + 14 : 1;
-            const activeIndex = Math.round(slider.scrollLeft / slideWidth);
+            isTouching = true;
+            isHorizontalSwipe = false;
+            startX = event.touches[0].clientX;
+            startY = event.touches[0].clientY;
+            currentIndex = getClosestIndex();
+        }, { passive: true });
 
-            dots.forEach(function (dot, index) {
-                dot.classList.toggle("is-active", index === activeIndex);
-            });
-        }
+        slider.addEventListener("touchmove", function (event) {
+            if (!isTouching || !event.touches || !event.touches.length) {
+                return;
+            }
+
+            const moveX = event.touches[0].clientX;
+            const moveY = event.touches[0].clientY;
+            const diffX = startX - moveX;
+            const diffY = startY - moveY;
+
+            if (!isHorizontalSwipe && Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 8) {
+                isHorizontalSwipe = true;
+            }
+
+            if (isHorizontalSwipe) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+
+        slider.addEventListener("touchend", function (event) {
+            if (!isTouching) {
+                return;
+            }
+
+            isTouching = false;
+
+            if (!event.changedTouches || !event.changedTouches.length) {
+                goToSlide(currentIndex, true);
+                return;
+            }
+
+            const endX = event.changedTouches[0].clientX;
+            const diffX = startX - endX;
+            const threshold = 45;
+
+            if (Math.abs(diffX) < threshold) {
+                goToSlide(currentIndex, true);
+                return;
+            }
+
+            if (diffX > 0) {
+                goToSlide(currentIndex + 1, true);
+            } else {
+                goToSlide(currentIndex - 1, true);
+            }
+        }, { passive: true });
 
         slider.addEventListener("scroll", function () {
-            window.requestAnimationFrame(updateDots);
+            window.requestAnimationFrame(function () {
+                if (isTouching) {
+                    return;
+                }
+
+                const index = getClosestIndex();
+
+                if (index !== currentIndex) {
+                    currentIndex = index;
+                    updateDots(currentIndex);
+                    updateSliderHeight(currentIndex);
+                }
+            });
         });
+
+        window.addEventListener("resize", function () {
+            goToSlide(currentIndex, false);
+        });
+
+        const sliderImages = slider.querySelectorAll("img");
+
+        sliderImages.forEach(function (image) {
+            image.addEventListener("load", function () {
+                updateSliderHeight(currentIndex);
+            });
+        });
+
+        goToSlide(0, false);
+
+        setTimeout(function () {
+            updateSliderHeight(currentIndex);
+        }, 300);
     }
 
     let mapData = [];
@@ -1351,6 +1521,10 @@ document.addEventListener('DOMContentLoaded', function () {
             setTimeout(function () {
                 map.relayout();
                 map.setBounds(bounds);
+
+                if (slider && typeof currentIndex !== "undefined") {
+                    const activeIndex = Math.max(0, Math.round(slider.scrollLeft / Math.max(slider.clientWidth, 1)));
+                }
             }, 250);
 
         } catch (e) {
@@ -1361,6 +1535,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     renderCourseMap(document.getElementById('course-map'));
     renderCourseMap(document.getElementById('mobile-course-map'));
+
+    if (slider) {
+        setTimeout(function () {
+            const activeSlide = slider.querySelector(".mobile-route-slide");
+            const activeCard = activeSlide ? activeSlide.querySelector(".mobile-slide-card") : null;
+
+            if (activeCard) {
+                slider.style.height = `${Math.ceil(activeCard.getBoundingClientRect().height) + 8}px`;
+            }
+        }, 500);
+    }
 });
 </script>
 {% endblock %}

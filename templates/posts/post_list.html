@@ -1,180 +1,201 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<section class="hero-section poinroute-hero-section">
-    <div class="hero-content">
-        <p class="eyebrow light">POINROUTE</p>
+<div class="post-list-page">
+    <section class="hero-section poinroute-hero-section">
+        <div class="hero-content">
+            <p class="eyebrow light">POINROUTE</p>
 
-        <h1 class="poinroute-hero-title">
-            <span class="poinroute-title-line">우리 동네에서 떠나는</span>
-            <span class="poinroute-title-line">여행 루트</span>
-        </h1>
+            <h1 class="poinroute-hero-title">
+                <span class="poinroute-title-line">우리 동네에서 떠나는</span>
+                <span class="poinroute-title-line">여행 루트</span>
+            </h1>
 
-        <p class="poinroute-hero-desc">
-            <span class="poinroute-desc-line">출발지, 여행 테마, 인기순, 목적지,</span>
-            <span class="poinroute-desc-line">닉네임으로 루트를 찾아보세요.</span>
-        </p>
-    </div>
+            <p class="poinroute-hero-desc">
+                <span class="poinroute-desc-line">출발지, 여행 테마, 인기순, 목적지,</span>
+                <span class="poinroute-desc-line">닉네임으로 루트를 찾아보세요.</span>
+            </p>
+        </div>
 
-    <form method="GET" class="poinroute-search-panel optimized-search">
-        <div class="search-group poinroute-box origin-box">
-            <div class="search-group-title">
-                <span>출발지</span>
-                <small>시/도 → 군/구</small>
+        <form method="GET" class="poinroute-search-panel optimized-search">
+            <div class="search-group poinroute-box origin-box">
+                <div class="search-group-title">
+                    <span>출발지</span>
+                    <small>시/도 → 군/구</small>
+                </div>
+
+                <div class="origin-select-row poinroute-origin-row">
+                    <select name="start_region" id="search_region" class="custom-select hero-select">
+                        <option value="">시/도</option>
+                    </select>
+
+                    <select name="start_district" id="search_district" class="custom-select hero-select">
+                        <option value="">군/구</option>
+                    </select>
+                </div>
             </div>
 
-            <div class="origin-select-row poinroute-origin-row">
-                <select name="start_region" id="search_region" class="custom-select hero-select">
-                    <option value="">시/도</option>
+            <div class="search-group poinroute-box theme-box">
+                <div class="search-group-title">
+                    <span>여행 테마</span>
+                    <small>스타일</small>
+                </div>
+
+                <select name="theme" id="search_theme" class="custom-select hero-select">
+                    <option value="">전체 테마</option>
+                    {% for value, label in theme_choices %}
+                        <option value="{{ value }}"{% if selected_theme == value %} selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
                 </select>
+            </div>
 
-                <select name="start_district" id="search_district" class="custom-select hero-select">
-                    <option value="">군/구</option>
+            <div class="search-group poinroute-box sort-box">
+                <div class="search-group-title">
+                    <span>인기 필터</span>
+                    <small>정렬 기준</small>
+                </div>
+
+                <select name="sort" class="custom-select hero-select sort-select">
+                    <option value="latest"{% if selected_sort == 'latest' %} selected{% endif %}>최신순</option>
+                    <option value="popular"{% if selected_sort == 'popular' %} selected{% endif %}>인기순</option>
+                    <option value="likes"{% if selected_sort == 'likes' %} selected{% endif %}>추천순</option>
+                    <option value="views"{% if selected_sort == 'views' %} selected{% endif %}>조회순</option>
                 </select>
             </div>
+
+            <div class="search-group poinroute-box keyword-box">
+                <div class="search-group-title">
+                    <span>통합 검색</span>
+                    <small>목적지, 루트명, 장소, 닉네임</small>
+                </div>
+
+                <div class="keyword-search-row">
+                    <input
+                        type="text"
+                        name="dest_loc"
+                        value="{{ search_keyword }}"
+                        placeholder="예: 강릉, 청라여행자"
+                    >
+                    <button type="submit">검색하기</button>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <section class="list-header">
+        <div class="list-header-copy">
+            <p class="eyebrow">REAL ROUTE</p>
+            <h2>실시간 추천 루트</h2>
         </div>
 
-        <div class="search-group poinroute-box theme-box">
-            <div class="search-group-title">
-                <span>여행 테마</span>
-                <small>스타일</small>
-            </div>
+        <form action="{% url 'posts:create' %}" method="get" class="create-course-form">
+            <button type="submit" class="dark-create-btn">
+                + 새 루트 등록
+            </button>
+        </form>
+    </section>
 
-            <select name="theme" id="search_theme" class="custom-select hero-select">
-                <option value="">전체 테마</option>
-                {% for value, label in theme_choices %}
-                    <option value="{{ value }}"{% if selected_theme == value %} selected{% endif %}>
-                        {{ label }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="search-group poinroute-box sort-box">
-            <div class="search-group-title">
-                <span>인기 필터</span>
-                <small>정렬 기준</small>
-            </div>
-
-            <select name="sort" class="custom-select hero-select sort-select">
-                <option value="latest"{% if selected_sort == 'latest' %} selected{% endif %}>최신순</option>
-                <option value="popular"{% if selected_sort == 'popular' %} selected{% endif %}>인기순</option>
-                <option value="likes"{% if selected_sort == 'likes' %} selected{% endif %}>추천순</option>
-                <option value="views"{% if selected_sort == 'views' %} selected{% endif %}>조회순</option>
-            </select>
-        </div>
-
-        <div class="search-group poinroute-box keyword-box">
-            <div class="search-group-title">
-                <span>통합 검색</span>
-                <small>목적지, 루트명, 장소, 닉네임</small>
-            </div>
-
-            <div class="keyword-search-row">
-                <input
-                    type="text"
-                    name="dest_loc"
-                    value="{{ search_keyword }}"
-                    placeholder="예: 강릉, 청라여행자"
-                >
-                <button type="submit">검색하기</button>
-            </div>
-        </div>
-    </form>
-</section>
-
-<section class="list-header">
-    <div class="list-header-copy">
-        <p class="eyebrow">REAL ROUTE</p>
-        <h2>실시간 추천 루트</h2>
-    </div>
-
-    <form action="{% url 'posts:create' %}" method="get" class="create-course-form">
-        <button type="submit" class="dark-create-btn">
-            + 새 루트 등록
-        </button>
-    </form>
-</section>
-
-<section class="post-grid">
-    {% for post in posts %}
-    <a href="{% url 'posts:detail' post.pk %}" class="post-card">
-        <div class="post-thumb">
-            {% if post.thumbnail %}
-                <img src="{{ post.thumbnail.url }}" alt="{{ post.title }}">
-            {% elif post.places.first.image %}
-                <img src="{{ post.places.first.image.url }}" alt="{{ post.title }}">
-            {% else %}
-                <div class="no-image">No Image</div>
-            {% endif %}
-
-            <div class="post-popular-badges">
-                {% if post.has_rating %}
-                    <span>★ {{ post.rating_avg_display }}</span>
-                {% endif %}
-                <span>👍 {{ post.likes_total|default:0 }}</span>
-                <span>👀 {{ post.views }}</span>
-            </div>
-        </div>
-
-        <div class="post-card-body">
-            <div class="chip-row">
-                <span class="chip blue">
-                    {{ post.start_region }} {{ post.start_district }}
-                </span>
-                <span class="chip gray">{{ post.get_theme_display }}</span>
-            </div>
-
-            <h3>{{ post.title }}</h3>
-
-            <div class="post-rating-row {% if not post.has_rating %}empty{% endif %}">
-                {% if post.has_rating %}
-                    <span
-                        class="pr-star-row pr-star-row-card"
-                        data-rating="{{ post.rating_avg_display }}"
-                        aria-label="별점 {{ post.rating_avg_display }}점"
-                    ></span>
-                    <strong>{{ post.rating_avg_display }}</strong>
-                    <span>({{ post.rating_count }})</span>
+    <section class="post-grid">
+        {% for post in posts %}
+        <a href="{% url 'posts:detail' post.pk %}" class="post-card">
+            <div class="post-thumb">
+                {% if post.thumbnail %}
+                    <img src="{{ post.thumbnail.url }}" alt="{{ post.title }}">
+                {% elif post.places.first.image %}
+                    <img src="{{ post.places.first.image.url }}" alt="{{ post.title }}">
                 {% else %}
-                    <span
-                        class="pr-star-row pr-star-row-card is-empty"
-                        data-rating="0"
-                        aria-label="리뷰 없음"
-                    ></span>
-                    <span>리뷰 없음</span>
+                    <div class="no-image">No Image</div>
                 {% endif %}
+
+                <div class="post-popular-badges">
+                    {% if post.has_rating %}
+                        <span>★ {{ post.rating_avg_display }}</span>
+                    {% endif %}
+                    <span>👍 {{ post.likes_total|default:0 }}</span>
+                    <span>👀 {{ post.views }}</span>
+                </div>
             </div>
 
-            <div class="post-author-row">
-                <span class="post-author-avatar">👤</span>
-                <span class="post-author-name">{{ post.author_nickname }}</span>
-                <span class="post-dot">·</span>
-                <span class="post-like-text">추천 {{ post.likes_total|default:0 }}</span>
-                <span class="post-dot">·</span>
-                <span class="post-view-text">조회 {{ post.views }}</span>
-            </div>
+            <div class="post-card-body">
+                <div class="chip-row">
+                    <span class="chip blue">
+                        {{ post.start_region }} {{ post.start_district }}
+                    </span>
+                    <span class="chip gray">{{ post.get_theme_display }}</span>
+                </div>
 
-            <div class="post-card-footer">
-                <span>⏱️ {{ post.total_time }}</span>
-                <span>💰 {{ post.total_cost }}원</span>
+                <h3>{{ post.title }}</h3>
+
+                <div class="post-rating-row {% if not post.has_rating %}empty{% endif %}">
+                    {% if post.has_rating %}
+                        <span
+                            class="pr-star-row pr-star-row-card"
+                            data-rating="{{ post.rating_avg_display }}"
+                            aria-label="별점 {{ post.rating_avg_display }}점"
+                        ></span>
+                        <strong>{{ post.rating_avg_display }}</strong>
+                        <span>({{ post.rating_count }})</span>
+                    {% else %}
+                        <span
+                            class="pr-star-row pr-star-row-card is-empty"
+                            data-rating="0"
+                            aria-label="리뷰 없음"
+                        ></span>
+                        <span>리뷰 없음</span>
+                    {% endif %}
+                </div>
+
+                <div class="post-author-row">
+                    <span class="post-author-avatar">👤</span>
+                    <span class="post-author-name">{{ post.author_nickname }}</span>
+                    <span class="post-dot">·</span>
+                    <span class="post-like-text">추천 {{ post.likes_total|default:0 }}</span>
+                    <span class="post-dot">·</span>
+                    <span class="post-view-text">조회 {{ post.views }}</span>
+                </div>
+
+                <div class="post-card-footer">
+                    <span>⏱️ {{ post.total_time }}</span>
+                    <span>💰 {{ post.total_cost }}원</span>
+                </div>
             </div>
+        </a>
+        {% empty %}
+        <div class="empty-posts">
+            <strong>아직 등록된 여행 루트가 없습니다.</strong>
+            <p>첫 번째 루트를 등록해보세요.</p>
         </div>
-    </a>
-    {% empty %}
-    <div class="empty-posts">
-        <strong>아직 등록된 여행 루트가 없습니다.</strong>
-        <p>첫 번째 루트를 등록해보세요.</p>
-    </div>
-    {% endfor %}
-</section>
+        {% endfor %}
+    </section>
+</div>
 
 <style>
+    html,
+    body {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .post-list-page {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .post-list-page,
+    .post-list-page * {
+        box-sizing: border-box;
+    }
+
     .poinroute-hero-section {
         width: min(1280px, calc(100% - 36px));
+        max-width: 1280px;
         margin-left: auto;
         margin-right: auto;
         padding-bottom: 50px;
+        box-sizing: border-box;
     }
 
     .poinroute-hero-title {
@@ -195,6 +216,7 @@
 
     .poinroute-search-panel.optimized-search {
         width: min(100%, 1190px);
+        max-width: 100%;
         margin: 28px auto 0;
         padding: 14px;
         border-radius: 28px;
@@ -210,12 +232,15 @@
             minmax(365px, 0.95fr);
         gap: 10px;
         align-items: stretch;
+        box-sizing: border-box;
     }
 
     .poinroute-box {
         min-width: 0;
+        max-width: 100%;
         padding: 13px;
         border-radius: 19px;
+        box-sizing: border-box;
     }
 
     .origin-box {
@@ -255,8 +280,9 @@
 
     .poinroute-origin-row {
         display: grid !important;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         gap: 8px;
+        min-width: 0;
     }
 
     .keyword-search-row {
@@ -264,11 +290,13 @@
         grid-template-columns: minmax(0, 1fr) 108px;
         gap: 8px;
         align-items: center;
+        min-width: 0;
     }
 
     .poinroute-search-panel select,
     .poinroute-search-panel input {
         width: 100% !important;
+        max-width: 100% !important;
         height: 48px;
         min-width: 0 !important;
         padding: 0 13px;
@@ -279,9 +307,9 @@
         font-size: 13px;
         font-weight: 800;
         outline: none;
-        box-sizing: border-box;
         white-space: nowrap;
         text-overflow: ellipsis;
+        box-sizing: border-box;
     }
 
     .poinroute-search-panel select {
@@ -299,6 +327,7 @@
     }
 
     .keyword-search-row button {
+        width: 100%;
         height: 48px;
         border: 0;
         border-radius: 14px;
@@ -309,6 +338,7 @@
         cursor: pointer;
         white-space: nowrap;
         box-shadow: 0 12px 24px rgba(49, 87, 246, 0.20);
+        box-sizing: border-box;
     }
 
     .keyword-search-row button:hover {
@@ -467,7 +497,7 @@
     @media (max-width: 1220px) {
         .poinroute-search-panel.optimized-search {
             width: min(100%, 1040px);
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         }
 
         .theme-box,
@@ -477,8 +507,23 @@
     }
 
     @media (max-width: 760px) {
+        html,
+        body {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        .post-list-page {
+            width: 100%;
+            max-width: 100%;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
         .poinroute-hero-section {
             width: min(100%, calc(100% - 22px));
+            max-width: calc(100% - 22px);
             padding-bottom: 36px;
         }
 
@@ -532,15 +577,17 @@
         }
 
         .poinroute-search-panel.optimized-search {
-
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
             padding: 12px;
             border-radius: 24px;
-            grid-template-columns: 1fr;
+            grid-template-columns: minmax(0, 1fr);
         }
 
         .poinroute-origin-row,
         .keyword-search-row {
-            grid-template-columns: 1fr !important;
+            grid-template-columns: minmax(0, 1fr) !important;
         }
 
         .keyword-search-row button {
@@ -548,8 +595,18 @@
         }
 
         .poinroute-box {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
             padding: 13px;
             border-radius: 18px;
+        }
+
+        .poinroute-search-panel select,
+        .poinroute-search-panel input {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
         }
     }
 
