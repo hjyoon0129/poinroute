@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'points/point_shop.css' %}?v=20260505_1">
+{% endblock %}
+
+{% block content %}
+<section class="point-shop-shell">
+    <header class="point-shop-hero compact">
+        <div>
+            <p class="point-eyebrow">POINT HISTORY</p>
+            <h1>포인트 내역</h1>
+            <p>적립, 사용, 환불 내역을 확인할 수 있어요.</p>
+        </div>
+
+        <div class="point-balance-card">
+            <span>내 포인트</span>
+            <strong>{{ user.profile.points|default:0 }}P</strong>
+            <a href="{% url 'points:shop' %}">포인트샵으로</a>
+        </div>
+    </header>
+
+    <section class="point-panel wide">
+        <div class="point-panel-head">
+            <h3>포인트 거래 내역</h3>
+        </div>
+
+        <div class="point-list">
+            {% for tx in transactions %}
+                <div class="point-list-row">
+                    <div>
+                        <strong>{{ tx.reason }}</strong>
+                        <span>{{ tx.created_at|date:"Y.m.d H:i" }} · {{ tx.get_transaction_type_display }}</span>
+                    </div>
+                    <em class="{% if tx.amount > 0 %}plus{% else %}minus{% endif %}">
+                        {% if tx.amount > 0 %}+{% endif %}{{ tx.amount }}P
+                    </em>
+                </div>
+            {% empty %}
+                <p class="point-muted">포인트 내역이 없습니다.</p>
+            {% endfor %}
+        </div>
+    </section>
+</section>
+{% endblock %}

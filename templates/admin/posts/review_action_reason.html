@@ -1,0 +1,434 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<style>
+    .poinroute-review-action-wrap {
+        max-width: 920px;
+        margin: 24px 0;
+    }
+
+    .poinroute-review-card {
+        background: #ffffff;
+        border: 1px solid #dfe5f0;
+        border-radius: 18px;
+        box-shadow: 0 14px 36px rgba(17, 24, 39, 0.08);
+        overflow: hidden;
+    }
+
+    .poinroute-review-head {
+        padding: 24px 26px;
+        border-bottom: 1px solid #eef1f6;
+        background: linear-gradient(180deg, #f8faff, #ffffff);
+    }
+
+    .poinroute-review-head h1 {
+        margin: 0 0 8px;
+        color: #111827;
+        font-size: 24px;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+    }
+
+    .poinroute-review-head p {
+        margin: 0;
+        color: #667085;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.55;
+    }
+
+    .poinroute-review-body {
+        padding: 24px 26px 26px;
+    }
+
+    .poinroute-review-alert {
+        margin: 0 0 18px;
+        padding: 13px 14px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.5;
+    }
+
+    .poinroute-review-alert.blue {
+        background: #eef2ff;
+        color: #3157f6;
+        border: 1px solid #d9e1ff;
+    }
+
+    .poinroute-review-alert.green {
+        background: #eefbf3;
+        color: #157347;
+        border: 1px solid #cdeed8;
+    }
+
+    .poinroute-review-alert.yellow {
+        background: #fff8e7;
+        color: #8b6b00;
+        border: 1px solid #f6d98a;
+    }
+
+    .poinroute-review-alert.red {
+        background: #fff3f4;
+        color: #d92d3c;
+        border: 1px solid #ffd0d5;
+    }
+
+    .poinroute-review-error {
+        margin: 0 0 18px;
+        padding: 13px 14px;
+        border-radius: 12px;
+        background: #fff3f4;
+        color: #d92d3c;
+        border: 1px solid #ffd0d5;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .poinroute-selected-list {
+        margin: 0 0 20px;
+        padding: 0;
+        list-style: none;
+        border: 1px solid #eef1f6;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .poinroute-selected-list li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 12px 14px;
+        border-bottom: 1px solid #eef1f6;
+        background: #ffffff;
+    }
+
+    .poinroute-selected-list li:last-child {
+        border-bottom: 0;
+    }
+
+    .poinroute-selected-list strong {
+        color: #111827;
+        font-size: 13px;
+        font-weight: 850;
+    }
+
+    .poinroute-selected-list span {
+        flex: 0 0 auto;
+        color: #7f8a9c;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .poinroute-review-label {
+        display: block;
+        margin-bottom: 8px;
+        color: #111827;
+        font-size: 14px;
+        font-weight: 850;
+    }
+
+    .poinroute-point-box {
+        margin: 0 0 20px;
+        padding: 16px;
+        border: 1px solid #d9e1ff;
+        border-radius: 16px;
+        background: linear-gradient(180deg, #f8faff, #ffffff);
+    }
+
+    .poinroute-point-input-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .poinroute-point-input {
+        width: 220px;
+        max-width: 100%;
+        height: 44px;
+        padding: 0 14px;
+        border-radius: 14px;
+        border: 1px solid #c7d0df;
+        background: #ffffff;
+        color: #111827;
+        font-size: 17px;
+        font-weight: 900;
+        box-sizing: border-box;
+    }
+
+    .poinroute-point-input:focus {
+        outline: none;
+        border-color: #3157f6;
+        box-shadow: 0 0 0 3px rgba(49, 87, 246, 0.12);
+    }
+
+    .poinroute-point-unit {
+        color: #157347;
+        font-size: 15px;
+        font-weight: 900;
+    }
+
+    .poinroute-point-presets {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+    }
+
+    .poinroute-point-preset {
+        min-height: 34px;
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 1px solid #dfe5f0;
+        background: #ffffff;
+        color: #4b5563;
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .poinroute-point-preset:hover {
+        background: #eef2ff;
+        border-color: #3157f6;
+        color: #3157f6;
+    }
+
+    .poinroute-review-textarea {
+        width: 100%;
+        min-height: 150px;
+        padding: 14px 15px;
+        border-radius: 14px;
+        border: 1px solid #c7d0df;
+        background: #ffffff;
+        color: #111827;
+        font-size: 14px;
+        font-weight: 650;
+        line-height: 1.65;
+        resize: vertical;
+        box-sizing: border-box;
+    }
+
+    .poinroute-review-textarea:focus {
+        outline: none;
+        border-color: #3157f6;
+        box-shadow: 0 0 0 3px rgba(49, 87, 246, 0.12);
+    }
+
+    .poinroute-review-help {
+        margin: 8px 0 0;
+        color: #7f8a9c;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.5;
+    }
+
+    .poinroute-review-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 22px;
+    }
+
+    .poinroute-review-submit {
+        min-height: 42px;
+        padding: 0 18px;
+        border-radius: 999px;
+        border: 0;
+        background: #3157f6;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 850;
+        cursor: pointer;
+    }
+
+    .poinroute-review-submit.green {
+        background: #157347;
+    }
+
+    .poinroute-review-submit.yellow {
+        background: #b77900;
+    }
+
+    .poinroute-review-submit.red {
+        background: #d92d3c;
+    }
+
+    .poinroute-review-cancel {
+        min-height: 42px;
+        padding: 0 18px;
+        border-radius: 999px;
+        border: 1px solid #dfe5f0;
+        background: #ffffff;
+        color: #4b5563;
+        font-size: 14px;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+    }
+
+    .poinroute-review-cancel:hover {
+        background: #f8faff;
+    }
+
+    @media (max-width: 640px) {
+        .poinroute-review-head,
+        .poinroute-review-body {
+            padding-left: 18px;
+            padding-right: 18px;
+        }
+
+        .poinroute-selected-list li {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .poinroute-selected-list span {
+            flex: 1 1 auto;
+        }
+
+        .poinroute-point-input {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="poinroute-review-action-wrap">
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="poinroute-review-card">
+            <div class="poinroute-review-head">
+                <h1>{{ title }}</h1>
+                <p>{{ description }}</p>
+            </div>
+
+            <div class="poinroute-review-body">
+                {% if error_message %}
+                    <div class="poinroute-review-error">
+                        {{ error_message }}
+                    </div>
+                {% endif %}
+
+                <div class="poinroute-review-alert {{ tone }}">
+                    선택한 루트 {{ selected_ids|length }}개에 같은 검수 메모가 적용됩니다.
+
+                    {% if allow_custom_points %}
+                        처리 완료 시 아래 입력한 포인트가 각 작성자에게 지급됩니다.
+                    {% elif point_amount %}
+                        처리 완료 시 각 작성자에게 {{ point_amount }}P가 지급됩니다.
+                    {% endif %}
+                </div>
+
+                <ul class="poinroute-selected-list">
+                    {% for post in queryset %}
+                        <li>
+                            <strong>{{ post.title }}</strong>
+                            <span>{{ post.author_nickname }} · {{ post.get_review_status_display }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+
+                {% if allow_custom_points %}
+                    <div class="poinroute-point-box">
+                        <label for="custom_points" class="poinroute-review-label">
+                            지급할 포인트
+                            <span style="color:#d92d3c;">*</span>
+                        </label>
+
+                        <div class="poinroute-point-input-wrap">
+                            <input
+                                type="number"
+                                id="custom_points"
+                                name="custom_points"
+                                class="poinroute-point-input"
+                                value="{{ default_points|default:50 }}"
+                                min="1"
+                                max="{{ max_admin_award_points|default:1000000 }}"
+                                step="1"
+                                required
+                            >
+                            <span class="poinroute-point-unit">P</span>
+                        </div>
+
+                        <div class="poinroute-point-presets">
+                            <button type="button" class="poinroute-point-preset" data-point="50">50P</button>
+                            <button type="button" class="poinroute-point-preset" data-point="100">100P</button>
+                            <button type="button" class="poinroute-point-preset" data-point="300">300P</button>
+                            <button type="button" class="poinroute-point-preset" data-point="500">500P</button>
+                            <button type="button" class="poinroute-point-preset" data-point="1000">1000P</button>
+                        </div>
+
+                        <p class="poinroute-review-help">
+                            기본값은 50P입니다. 숫자로 원하는 포인트를 직접 입력할 수 있습니다.
+                            이미 포인트가 지급된 루트는 중복 지급하지 않고 승인 알림만 다시 처리됩니다.
+                        </p>
+                    </div>
+                {% endif %}
+
+                <label for="review_note" class="poinroute-review-label">
+                    검수 메모
+                    {% if require_note %}
+                        <span style="color:#d92d3c;">*</span>
+                    {% endif %}
+                </label>
+
+                <textarea
+                    id="review_note"
+                    name="review_note"
+                    class="poinroute-review-textarea"
+                    placeholder="사용자에게 보여줄 검수 사유를 입력하세요."
+                    {% if require_note %}required{% endif %}
+                >{{ default_note }}</textarea>
+
+                <p class="poinroute-review-help">
+                    이 메모는 사용자가 로그인했을 때 검수 결과 모달에 표시됩니다.
+                    승인 사유는 선택 입력이고, 수정요청/반려 사유는 필수 입력입니다.
+                </p>
+
+                {% for selected_id in selected_ids %}
+                    <input type="hidden" name="{{ action_checkbox_name }}" value="{{ selected_id }}">
+                {% endfor %}
+
+                <input type="hidden" name="action" value="{{ action_name }}">
+                <input type="hidden" name="select_across" value="0">
+                <input type="hidden" name="apply_review_action" value="1">
+
+                <div class="poinroute-review-actions">
+                    <button type="submit" class="poinroute-review-submit {{ tone }}">
+                        {{ submit_label }}
+                    </button>
+
+                    <a href="." class="poinroute-review-cancel">
+                        취소
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const pointInput = document.getElementById("custom_points");
+        const presetButtons = document.querySelectorAll(".poinroute-point-preset");
+
+        if (!pointInput || !presetButtons.length) {
+            return;
+        }
+
+        presetButtons.forEach(function (button) {
+            button.addEventListener("click", function () {
+                const point = button.getAttribute("data-point");
+                pointInput.value = point;
+                pointInput.focus();
+            });
+        });
+    });
+</script>
+{% endblock %}

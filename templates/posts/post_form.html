@@ -1,0 +1,501 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=b131d128b1f566daa4a809b7fa5e61a9&libraries=services"></script>
+
+<section class="form-shell">
+    <div class="form-heading">
+        <p class="eyebrow">POINROUTE</p>
+        <h1>{% if is_update %}루트 수정하기{% else %}나만의 여행 루트 기록하기{% endif %}</h1>
+        <p>출발지부터 경유지, 대표 목적지까지 흐름이 잘 보이도록 여행 루트를 정리해보세요.</p>
+    </div>
+
+    {% if form.errors or formset.errors %}
+    <div class="form-error-box">
+        <strong>⚠️ 입력 내용을 확인해주세요.</strong>
+
+        {% for field in form %}
+            {% if field.errors %}
+                <p>- {{ field.label }}: {{ field.errors|striptags }}</p>
+            {% endif %}
+        {% endfor %}
+
+        {% for form_item in formset %}
+            {% for field in form_item %}
+                {% if field.errors %}
+                    <p>- {{ field.label }}: {{ field.errors|striptags }}</p>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="summary-panel">
+        <div class="summary-item">
+            <span>총 예상 소요시간</span>
+            <strong id="display_total_time">입력 대기중</strong>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-item">
+            <span>총 예상 경비</span>
+            <strong id="display_total_cost">0원</strong>
+        </div>
+    </div>
+
+    <div id="map-overlay" class="modal-overlay" hidden></div>
+
+    <div id="map-search-container" class="map-modal" hidden>
+        <div class="map-modal-header">
+            <div>
+                <p class="eyebrow">KAKAO MAP</p>
+                <h3>장소 검색</h3>
+            </div>
+            <button type="button" class="icon-close-btn" id="map-close-btn" aria-label="닫기">×</button>
+        </div>
+
+        <div class="map-search-row">
+            <input
+                type="text"
+                id="keyword"
+                class="form-input-clean"
+                placeholder="장소명을 입력하세요. 예: 청라역, 강릉 스카이베이"
+            >
+            <button type="button" class="primary-mini-btn" id="map-search-btn">검색</button>
+        </div>
+
+        <div class="map-results">
+            <ul id="placesList">
+                <li class="empty-result">검색 결과가 여기에 표시됩니다.</li>
+            </ul>
+        </div>
+
+        <div id="map" class="map-box"></div>
+
+        <input type="hidden" id="current_target_input">
+        <input type="hidden" id="current_target_type">
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" id="courseForm" class="course-form">
+        {% csrf_token %}
+        {{ form.total_cost }}
+        {{ form.total_time }}
+
+        <section class="form-section">
+            <div class="section-title">
+                <span>1</span>
+                <div>
+                    <h2>기본 정보</h2>
+                    <p>대표 썸네일, 출발 지역, 출발 시간, 대표 목적지와 여행 날짜를 입력하세요.</p>
+                </div>
+            </div>
+
+            <div class="form-grid grid-1-2">
+                <div class="field-box">
+                    <label>여행 테마</label>
+                    {{ form.theme }}
+                </div>
+
+                <div class="field-box">
+                    <label>루트 제목</label>
+                    {{ form.title }}
+                </div>
+            </div>
+
+            <div class="field-box">
+                <label>대표 썸네일</label>
+
+                <div class="thumbnail-uploader">
+                    <div class="thumbnail-preview" id="thumbnailPreview">
+                        {% if form.instance.thumbnail %}
+                            <img src="{{ form.instance.thumbnail.url }}" alt="대표 썸네일 미리보기">
+                        {% else %}
+                            <div class="thumbnail-placeholder">
+                                <span>대표 이미지를 추가해보세요</span>
+                                <small>권장 비율 16:9</small>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="thumbnail-meta">
+                        <div class="upload-button-row">
+                            <label for="{{ form.thumbnail.id_for_label }}" class="upload-trigger">이미지 선택</label>
+                            <button
+                                type="button"
+                                id="thumbnailClearBtn"
+                                class="upload-clear-btn{% if not form.instance.thumbnail %} is-hidden{% endif %}"
+                            >
+                                이미지 삭제
+                            </button>
+                        </div>
+
+                        <div class="thumbnail-native-widget" id="thumbnailNativeWidget">
+                            {{ form.thumbnail }}
+                        </div>
+
+                        <p class="upload-file-name" id="thumbnailFileName">
+                            {% if form.instance.thumbnail %}
+                                현재 업로드된 이미지가 있습니다.
+                            {% else %}
+                                아직 선택된 파일이 없습니다.
+                            {% endif %}
+                        </p>
+
+                        <small class="upload-hint">첫 화면과 상세 페이지의 대표 이미지로 사용됩니다.</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-grid grid-3">
+                <div class="field-box">
+                    <label>출발 시/도</label>
+                    <select id="ui_region" class="custom-select">
+                        <option value="">시/도</option>
+                    </select>
+                    {{ form.start_region }}
+                </div>
+
+                <div class="field-box">
+                    <label>출발 군/구</label>
+                    <select id="ui_district" class="custom-select">
+                        <option value="">군/구</option>
+                    </select>
+                    {{ form.start_district }}
+                </div>
+
+                <div class="field-box">
+                    <label>출발 시간</label>
+                    {{ form.start_time }}
+                </div>
+            </div>
+
+            <div class="field-box start-map-field">
+                <label>출발지 지도 위치</label>
+
+                <div class="start-map-row">
+                    <input
+                        type="text"
+                        id="start_map_display"
+                        class="form-input-clean start-map-display"
+                        value="{% if form.instance.start_place_name %}{{ form.instance.start_place_name }}{% elif form.instance.start_region or form.instance.start_district %}{{ form.instance.start_region }} {{ form.instance.start_district }}{% endif %}"
+                        placeholder="지도 검색으로 정확한 출발 위치를 선택하세요. 예: 청라역, 집 근처"
+                        readonly
+                    >
+
+                    <button type="button" id="start-map-open-btn" class="start-map-btn">
+                        출발지 지도 검색
+                    </button>
+                </div>
+
+                <div class="hidden-fields">
+                    {{ form.start_place_name }}
+                    {{ form.start_latitude }}
+                    {{ form.start_longitude }}
+                </div>
+
+                <small class="field-help">
+                    선택하면 상세페이지 지도에서 출발지부터 첫 번째 방문장소까지 선으로 연결됩니다.
+                </small>
+            </div>
+
+            <div class="form-grid grid-3">
+                <div class="field-box destination-field-box">
+                    <label>대표 목적지</label>
+                    {{ form.destination }}
+                    <small class="field-help">최종 도착지가 아니어도 괜찮아요. 루트를 대표하는 목적지를 적어주세요.</small>
+                </div>
+
+                <div class="field-box">
+                    <label>여행 시작일</label>
+                    {{ form.travel_start_date }}
+                </div>
+
+                <div class="field-box">
+                    <label>여행 종료일</label>
+                    {{ form.travel_end_date }}
+                </div>
+            </div>
+        </section>
+
+        <section class="form-section">
+            <div class="section-title">
+                <span>2</span>
+                <div>
+                    <h2>상세 루트</h2>
+                    <p>기본으로 1일차 3개가 표시됩니다. 출발지 이후 경유 순서대로 장소를 채워주세요.</p>
+                </div>
+            </div>
+
+            {{ formset.management_form }}
+
+            <div id="place-container" class="place-container">
+                {% for place_form in formset %}
+                <article class="place-form-card">
+                    <div class="place-card-top">
+                        <h3 class="place-number">📍 장소 {{ forloop.counter }}</h3>
+                        <button type="button" class="remove-btn">삭제</button>
+                    </div>
+
+                    <div class="hidden-fields">
+                        {% for hidden in place_form.hidden_fields %}
+                            {{ hidden }}
+                        {% endfor %}
+                        {{ place_form.DELETE }}
+                    </div>
+
+                    <div class="form-grid grid-time-cost">
+                        <div class="field-box">
+                            <label>방문 시간</label>
+                            <div class="visit-time-row">
+                                {{ place_form.day }}
+                                {{ place_form.visit_time_str }}
+                            </div>
+                        </div>
+
+                        <div class="field-box">
+                            <label>경비</label>
+                            {{ place_form.cost }}
+                        </div>
+                    </div>
+
+                    <div class="field-box place-full-row">
+                        <label>장소명</label>
+                        <div class="map-input-row">
+                            {{ place_form.place_name }}
+                            <button type="button" class="map-open-btn">지도 검색</button>
+                        </div>
+                    </div>
+
+                    <div class="field-box place-full-row">
+                        <label>설명</label>
+                        {{ place_form.description }}
+                    </div>
+
+                    <div class="field-box place-full-row">
+                        <label>장소 이미지</label>
+
+                        <div class="place-image-control place-image-wide">
+                            <div class="place-image-button-row">
+                                <label for="{{ place_form.image.id_for_label }}" class="mini-upload-trigger">이미지 선택</label>
+                                <button
+                                    type="button"
+                                    class="place-image-clear-btn{% if not place_form.instance.image %} is-hidden{% endif %}"
+                                >
+                                    이미지 삭제
+                                </button>
+                            </div>
+
+                            <div class="place-image-native-widget">
+                                {{ place_form.image }}
+                            </div>
+
+                            <span class="place-image-file-name">
+                                {% if place_form.instance.image %}
+                                    현재 이미지가 있습니다.
+                                {% else %}
+                                    아직 선택된 이미지가 없습니다.
+                                {% endif %}
+                            </span>
+
+                            <small class="place-image-hint">이 장소 카드에 노출될 이미지입니다.</small>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+
+            <button type="button" id="add-place-btn" class="add-place-btn">
+                + 장소 추가하기
+            </button>
+        </section>
+
+        <div class="form-actions">
+            <a href="{% url 'posts:list' %}" class="secondary-btn">작성 취소</a>
+            <button type="submit" class="primary-btn">
+                포인루트에 루트 등록하기
+            </button>
+        </div>
+    </form>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const thumbWidget = document.getElementById('thumbnailNativeWidget');
+    const thumbInput = thumbWidget ? thumbWidget.querySelector('input[type="file"]') : null;
+    const thumbClearInput = thumbWidget ? thumbWidget.querySelector('input[type="checkbox"]') : null;
+    const thumbPreview = document.getElementById('thumbnailPreview');
+    const thumbFileName = document.getElementById('thumbnailFileName');
+    const thumbClearBtn = document.getElementById('thumbnailClearBtn');
+
+    const startDisplay = document.getElementById('start_map_display');
+    const startNameInput = document.getElementById('id_start_place_name');
+    const currentTargetInput = document.getElementById('current_target_input');
+    const currentTargetType = document.getElementById('current_target_type');
+    const keywordInput = document.getElementById('keyword');
+    const mapOverlay = document.getElementById('map-overlay');
+    const mapModal = document.getElementById('map-search-container');
+    const placesList = document.getElementById('placesList');
+
+    function renderThumbnailPlaceholder(text) {
+        if (!thumbPreview) return;
+
+        thumbPreview.innerHTML = `
+            <div class="thumbnail-placeholder">
+                <span>${text}</span>
+                <small>권장 비율 16:9</small>
+            </div>
+        `;
+    }
+
+    if (thumbInput) {
+        thumbInput.addEventListener('change', function () {
+            const file = this.files && this.files[0];
+
+            if (!file) {
+                if (thumbFileName) thumbFileName.textContent = '아직 선택된 파일이 없습니다.';
+                return;
+            }
+
+            if (thumbClearInput) thumbClearInput.checked = false;
+            if (thumbFileName) thumbFileName.textContent = file.name;
+            if (thumbClearBtn) thumbClearBtn.classList.remove('is-hidden');
+
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                if (thumbPreview) {
+                    thumbPreview.innerHTML = `<img src="${e.target.result}" alt="대표 썸네일 미리보기">`;
+                }
+            };
+
+            reader.readAsDataURL(file);
+        });
+    }
+
+    if (thumbClearBtn) {
+        thumbClearBtn.addEventListener('click', function () {
+            if (thumbInput) thumbInput.value = '';
+            if (thumbClearInput) thumbClearInput.checked = true;
+
+            renderThumbnailPlaceholder('이미지 삭제 예정');
+
+            if (thumbFileName) thumbFileName.textContent = '저장하면 대표 이미지가 삭제됩니다.';
+
+            thumbClearBtn.classList.add('is-hidden');
+        });
+    }
+
+    document.addEventListener('change', function (event) {
+        const fileInput = event.target.closest('.place-image-control input[type="file"]');
+        if (!fileInput) return;
+
+        const control = fileInput.closest('.place-image-control');
+        const clearInput = control ? control.querySelector('input[type="checkbox"]') : null;
+        const clearBtn = control ? control.querySelector('.place-image-clear-btn') : null;
+        const fileName = control ? control.querySelector('.place-image-file-name') : null;
+        const file = fileInput.files && fileInput.files[0];
+
+        if (!file) {
+            if (fileName) fileName.textContent = '아직 선택된 이미지가 없습니다.';
+            return;
+        }
+
+        if (clearInput) clearInput.checked = false;
+        if (fileName) fileName.textContent = file.name;
+        if (clearBtn) clearBtn.classList.remove('is-hidden');
+    });
+
+    document.addEventListener('click', function (event) {
+        const clearBtn = event.target.closest('.place-image-clear-btn');
+        if (!clearBtn) return;
+
+        const control = clearBtn.closest('.place-image-control');
+        if (!control) return;
+
+        const fileInput = control.querySelector('input[type="file"]');
+        const clearInput = control.querySelector('input[type="checkbox"]');
+        const fileName = control.querySelector('.place-image-file-name');
+
+        if (fileInput) fileInput.value = '';
+        if (clearInput) clearInput.checked = true;
+        if (fileName) fileName.textContent = '저장하면 이미지가 삭제됩니다.';
+
+        clearBtn.classList.add('is-hidden');
+    });
+
+    function syncStartDisplay() {
+        if (!startDisplay || !startNameInput) return;
+
+        if (startNameInput.value) {
+            startDisplay.value = startNameInput.value;
+        }
+    }
+
+    if (startNameInput) {
+        startNameInput.addEventListener('input', syncStartDisplay);
+        startNameInput.addEventListener('change', syncStartDisplay);
+    }
+
+    if (placesList) {
+        placesList.addEventListener('click', function () {
+            if (!currentTargetType || currentTargetType.value !== 'start') return;
+
+            setTimeout(function () {
+                syncStartDisplay();
+            }, 80);
+        });
+    }
+
+    const startMapBtn = document.getElementById('start-map-open-btn');
+
+    if (startMapBtn) {
+        startMapBtn.addEventListener('click', function () {
+            if (!startNameInput || !currentTargetInput || !keywordInput || !mapOverlay || !mapModal) return;
+
+            let searchText = '';
+
+            if (startNameInput.value) {
+                searchText = startNameInput.value.trim();
+            }
+
+            if (!searchText && startDisplay && startDisplay.value) {
+                searchText = startDisplay.value.trim();
+            }
+
+            if (!searchText) {
+                const startRegion = document.getElementById('id_start_region')?.value || '';
+                const startDistrict = document.getElementById('id_start_district')?.value || '';
+
+                searchText = `${startRegion} ${startDistrict}`.trim();
+            }
+
+            currentTargetInput.value = startNameInput.id;
+
+            if (currentTargetType) {
+                currentTargetType.value = 'start';
+            }
+
+            keywordInput.value = searchText;
+
+            mapOverlay.hidden = false;
+            mapModal.hidden = false;
+
+            if (typeof window.searchPlaces === 'function' && searchText) {
+                setTimeout(function () {
+                    window.searchPlaces();
+                }, 150);
+            }
+        });
+    }
+
+    const courseForm = document.getElementById('courseForm');
+
+    if (courseForm) {
+        courseForm.addEventListener('submit', function () {
+            if (startNameInput && startDisplay && !startNameInput.value && startDisplay.value) {
+                startNameInput.value = startDisplay.value;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

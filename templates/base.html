@@ -1,0 +1,645 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>포인루트 - 여행 루트를 공유하고 포인트를 받는 커뮤니티</title>
+
+    <meta name="description" content="포인루트는 여행 루트와 코스를 공유하고, 좋은 여행 정보를 나누며 포인트를 쌓는 여행 커뮤니티입니다.">
+    <meta name="keywords" content="포인루트, Poinroute, 여행 루트, 여행 코스, 여행 커뮤니티, 여행 공유, 포인트 여행">
+
+    <meta property="og:title" content="포인루트 - 여행 루트를 공유하는 커뮤니티">
+    <meta property="og:description" content="내가 다녀온 여행 루트가 누군가의 다음 여행이 됩니다. 좋은 여행 루트를 공유하고 포인트를 받아보세요.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="포인루트">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://npmcdn.com/flatpickr/dist/themes/airbnb.css">
+
+    <link rel="stylesheet" href="{% static 'posts/posts.css' %}?v=20260505_pointshop_base_2">
+    <link rel="stylesheet" href="{% static 'posts/css/00_base.css' %}?v=20260505_pointshop_base_2">
+
+    {% block extra_css %}{% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
+
+    <style>
+        .review-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 9998;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.62);
+            backdrop-filter: blur(10px);
+        }
+
+        .review-modal-card {
+            width: min(100%, 480px);
+            padding: 32px 30px 28px;
+            border-radius: 28px;
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            box-shadow: 0 30px 90px rgba(15, 23, 42, 0.28);
+            text-align: center;
+            animation: reviewModalUp 0.22s ease-out;
+        }
+
+        @keyframes reviewModalUp {
+            from {
+                opacity: 0;
+                transform: translateY(14px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .review-modal-icon {
+            width: 58px;
+            height: 58px;
+            margin: 0 auto 14px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+        }
+
+        .review-modal-icon.approved {
+            background: #eefbf3;
+        }
+
+        .review-modal-icon.needs-edit {
+            background: #fff8e7;
+        }
+
+        .review-modal-icon.rejected {
+            background: #fff3f4;
+        }
+
+        .review-modal-eyebrow {
+            margin: 0 0 8px;
+            color: #3157f6;
+            font-size: 11px;
+            font-weight: 950;
+            letter-spacing: 0.16em;
+        }
+
+        .review-modal-card h2 {
+            margin: 0;
+            color: #111827;
+            font-size: 26px;
+            line-height: 1.25;
+            font-weight: 950;
+            letter-spacing: -0.06em;
+            word-break: keep-all;
+        }
+
+        .review-modal-desc {
+            margin: 13px 0 18px;
+            color: #667085;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1.65;
+            word-break: keep-all;
+        }
+
+        .review-route-title {
+            margin: 0 0 14px;
+            padding: 12px 14px;
+            border-radius: 15px;
+            background: #f4f6fb;
+            color: #111827;
+            font-size: 14px;
+            font-weight: 900;
+            line-height: 1.45;
+            word-break: keep-all;
+        }
+
+        .review-note-box {
+            margin: 0 0 18px;
+            padding: 14px 15px;
+            border-radius: 16px;
+            background: #fffdf7;
+            border: 1px solid #f6d98a;
+            color: #5f4b14;
+            font-size: 13px;
+            font-weight: 750;
+            line-height: 1.65;
+            text-align: left;
+            word-break: keep-all;
+        }
+
+        .review-modal-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .review-modal-actions form {
+            margin: 0;
+        }
+
+        .review-modal-button {
+            min-height: 48px;
+            padding: 0 28px;
+            border-radius: 15px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 950;
+            cursor: pointer;
+            text-decoration: none;
+            border: 0;
+            background: #3157f6;
+            color: #ffffff;
+            box-shadow: 0 12px 24px rgba(49, 87, 246, 0.22);
+        }
+
+        .review-modal-button:hover {
+            background: #2447d8;
+        }
+
+        body:has(.review-modal-backdrop),
+        body:has(.nickname-modal-backdrop) {
+            overflow: hidden;
+        }
+
+        .nickname-form label:not(:first-of-type) {
+            margin-top: 12px;
+        }
+
+        .nickname-form input[type="email"] {
+            width: 100%;
+            height: 52px;
+            padding: 0 15px;
+            border-radius: 14px;
+            border: 1px solid #c7d0df;
+            background: #ffffff;
+            color: #111827;
+            font-size: 15px;
+            font-weight: 750;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .nickname-form input[type="email"]:focus {
+            border-color: #3157f6;
+            box-shadow: 0 0 0 4px rgba(49, 87, 246, 0.12);
+        }
+
+        @media (max-width: 520px) {
+            .review-modal-card {
+                padding: 28px 20px 24px;
+                border-radius: 24px;
+            }
+
+            .review-modal-card h2 {
+                font-size: 23px;
+            }
+
+            .review-modal-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .review-modal-button,
+            .review-modal-actions form {
+                width: 100%;
+            }
+
+            .review-modal-button {
+                padding: 0 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="pr-navbar {% if user.is_authenticated %}is-authenticated{% else %}is-guest{% endif %}">
+        <div class="pr-nav-shell">
+            <a href="{% url 'posts:list' %}" class="pr-logo">포인루트</a>
+
+            <div class="pr-nav-menu">
+                <a
+                    href="{% url 'posts:list' %}"
+                    class="pr-nav-link {% if request.resolver_match.app_name == 'posts' %}active{% endif %}"
+                >
+                    <span class="pr-nav-icon">📍</span>
+                    <span class="pr-nav-label">여행루트</span>
+                    <span class="pr-nav-mobile-label">여행</span>
+                </a>
+
+                <a
+                    href="{% url 'community:list' %}"
+                    class="pr-nav-link {% if request.resolver_match.app_name == 'community' %}active{% endif %}"
+                >
+                    <span class="pr-nav-icon">💬</span>
+                    <span class="pr-nav-label">커뮤니티</span>
+                    <span class="pr-nav-mobile-label">커뮤</span>
+                </a>
+
+                <a
+                    href="{% url 'auctions:list' %}"
+                    class="pr-nav-link {% if request.resolver_match.app_name == 'auctions' %}active{% endif %}"
+                >
+                    <span class="pr-nav-icon">🧭</span>
+                    <span class="pr-nav-label">루트의뢰</span>
+                    <span class="pr-nav-mobile-label">의뢰</span>
+                </a>
+
+                <a
+                    href="{% url 'points:shop' %}"
+                    class="pr-nav-link {% if request.resolver_match.app_name == 'points' %}active{% endif %}"
+                >
+                    <span class="pr-nav-icon">💰</span>
+                    <span class="pr-nav-label">포인트샵</span>
+                    <span class="pr-nav-mobile-label">샵</span>
+                </a>
+            </div>
+
+            <div class="pr-nav-user">
+                {% if user.is_authenticated %}
+                    {% with user_points=user.profile.points|default:0 %}
+                    <div class="pr-profile-menu" id="prProfileMenu">
+                        <button
+                            type="button"
+                            class="pr-profile-trigger"
+                            id="prProfileTrigger"
+                            aria-expanded="false"
+                            aria-controls="prProfileDropdown"
+                        >
+                            <span class="pr-rank-shield">
+                                <span class="pr-rank-shield-top">LV</span>
+
+                                {% if user_points >= 10000 %}
+                                    <strong>5</strong>
+                                {% elif user_points >= 5000 %}
+                                    <strong>4</strong>
+                                {% elif user_points >= 2000 %}
+                                    <strong>3</strong>
+                                {% elif user_points >= 500 %}
+                                    <strong>2</strong>
+                                {% else %}
+                                    <strong>1</strong>
+                                {% endif %}
+                            </span>
+
+                            <span class="pr-profile-copy">
+                                <strong class="pr-profile-name">
+                                    {% if user.profile.nickname %}
+                                        {{ user.profile.nickname }}
+                                    {% elif user.username %}
+                                        {{ user.username }}
+                                    {% elif user.email %}
+                                        {{ user.email }}
+                                    {% else %}
+                                        여행자
+                                    {% endif %}
+                                </strong>
+
+                                <span class="pr-profile-sub">
+                                    {% if user_points >= 10000 %}
+                                        루트 마스터
+                                    {% elif user_points >= 5000 %}
+                                        로컬 가이드
+                                    {% elif user_points >= 2000 %}
+                                        인기 여행자
+                                    {% elif user_points >= 500 %}
+                                        루트 탐험가
+                                    {% else %}
+                                        초기 여행자
+                                    {% endif %}
+                                    · {{ user_points }}P
+                                </span>
+                            </span>
+
+                            <span class="pr-profile-caret">▾</span>
+                        </button>
+
+                        <div class="pr-profile-dropdown" id="prProfileDropdown">
+                            <div class="pr-profile-dropdown-head">
+                                <span class="pr-profile-dropdown-level">
+                                    {% if user_points >= 10000 %}
+                                        LV 5
+                                    {% elif user_points >= 5000 %}
+                                        LV 4
+                                    {% elif user_points >= 2000 %}
+                                        LV 3
+                                    {% elif user_points >= 500 %}
+                                        LV 2
+                                    {% else %}
+                                        LV 1
+                                    {% endif %}
+                                </span>
+
+                                <strong>
+                                    {% if user.profile.nickname %}
+                                        {{ user.profile.nickname }}
+                                    {% elif user.username %}
+                                        {{ user.username }}
+                                    {% elif user.email %}
+                                        {{ user.email }}
+                                    {% else %}
+                                        여행자
+                                    {% endif %}
+                                </strong>
+
+                                <p>
+                                    {% if user_points >= 10000 %}
+                                        루트 마스터
+                                    {% elif user_points >= 5000 %}
+                                        로컬 가이드
+                                    {% elif user_points >= 2000 %}
+                                        인기 여행자
+                                    {% elif user_points >= 500 %}
+                                        루트 탐험가
+                                    {% else %}
+                                        초기 여행자
+                                    {% endif %}
+                                    · {{ user_points }}P
+                                </p>
+                            </div>
+
+                            <a href="{% url 'points:shop' %}" class="pr-profile-menu-item">
+                                💰 포인트샵
+                            </a>
+
+                            <a href="{% url 'points:history' %}" class="pr-profile-menu-item">
+                                📜 포인트 내역
+                            </a>
+
+                            <a href="{% url 'posts:create' %}" class="pr-profile-menu-item">
+                                ✍️ 새 루트 등록
+                            </a>
+
+                            <a href="{% url 'accounts:logout' %}" class="pr-profile-menu-item danger">
+                                로그아웃
+                            </a>
+                        </div>
+                    </div>
+                    {% endwith %}
+                {% else %}
+                    <a href="{% url 'accounts:login' %}" class="pr-login-btn">로그인</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% if user.is_authenticated and not user.profile.nickname %}
+    <div class="nickname-modal-backdrop" id="nicknameModal">
+        <div class="nickname-modal-card">
+            <div class="nickname-modal-icon">🧭</div>
+
+            <p class="nickname-modal-eyebrow">WELCOME TO POINROUTE</p>
+            <h2>포인루트에서 사용할 정보를 입력해주세요</h2>
+
+            <p class="nickname-modal-desc">
+                닉네임은 여행 루트 작성자, 댓글, 커뮤니티, 루트 의뢰에서 표시됩니다.
+                보호 이메일은 쿠폰 지급, 포인트샵 안내, 계정 복구에 사용됩니다.
+            </p>
+
+            {% if messages %}
+            <div class="nickname-message-list">
+                {% for message in messages %}
+                    <p class="nickname-message {{ message.tags }}">{{ message }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="POST" action="{% url 'accounts:set_nickname' %}" class="nickname-form">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+                <label for="nicknameInput">닉네임</label>
+                <input
+                    type="text"
+                    id="nicknameInput"
+                    name="nickname"
+                    maxlength="20"
+                    minlength="2"
+                    placeholder="예: 청라여행자"
+                    required
+                    autocomplete="nickname"
+                    autofocus
+                >
+
+                <small>
+                    2~20자. 한글, 영문, 숫자, _ 만 사용할 수 있어요.
+                </small>
+
+                <label for="recoveryEmailInput">보호 이메일</label>
+                <input
+                    type="email"
+                    id="recoveryEmailInput"
+                    name="recovery_email"
+                    placeholder="예: poinroute@email.com"
+                    value="{% if user.email %}{{ user.email }}{% elif user.profile.recovery_email %}{{ user.profile.recovery_email }}{% endif %}"
+                    required
+                    autocomplete="email"
+                >
+
+                <small>
+                    카카오처럼 이메일을 제공하지 않는 로그인에서도 쿠폰 지급과 계정 복구를 위해 필요합니다.
+                </small>
+
+                <button type="submit">
+                    저장하고 시작하기
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {% elif user.is_authenticated and review_notice_post %}
+    <div class="review-modal-backdrop" id="reviewNoticeModal">
+        <div class="review-modal-card">
+            {% if review_notice_post.review_status == "approved" %}
+                <div class="review-modal-icon approved">🎉</div>
+                <p class="review-modal-eyebrow">ROUTE APPROVED</p>
+                <h2>루트가 승인되었습니다</h2>
+                <p class="review-modal-desc">
+                    작성하신 여행 루트가 승인되어
+                    <strong>{{ review_notice_post.awarded_points }}P</strong>가 지급되었습니다.
+                </p>
+            {% elif review_notice_post.review_status == "needs_edit" %}
+                <div class="review-modal-icon needs-edit">✏️</div>
+                <p class="review-modal-eyebrow">EDIT REQUESTED</p>
+                <h2>수정 요청이 있습니다</h2>
+                <p class="review-modal-desc">
+                    작성하신 여행 루트에 수정이 필요합니다.
+                    아래 내용을 확인한 뒤 다시 수정해주세요.
+                </p>
+            {% elif review_notice_post.review_status == "rejected" %}
+                <div class="review-modal-icon rejected">🚫</div>
+                <p class="review-modal-eyebrow">ROUTE REJECTED</p>
+                <h2>루트가 반려되었습니다</h2>
+                <p class="review-modal-desc">
+                    작성하신 여행 루트가 검수 기준에 맞지 않아 반려되었습니다.
+                    아래 사유를 확인해주세요.
+                </p>
+            {% endif %}
+
+            <div class="review-route-title">
+                {{ review_notice_post.title }}
+            </div>
+
+            {% if review_notice_post.review_note %}
+                <div class="review-note-box">
+                    {{ review_notice_post.review_note|linebreaksbr }}
+                </div>
+            {% else %}
+                <div class="review-note-box">
+                    별도 검수 메모가 없습니다.
+                </div>
+            {% endif %}
+
+            <div class="review-modal-actions">
+                <form method="post" action="{% url 'posts:read_review_notice' review_notice_post.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="review-modal-button">확인</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% elif user.is_authenticated and reward_notice %}
+    <div class="review-modal-backdrop" id="rewardNoticeModal">
+        <div class="review-modal-card">
+            {% if reward_notice.status == "sent" %}
+                <div class="review-modal-icon approved">🎁</div>
+                <p class="review-modal-eyebrow">REWARD SENT</p>
+                <h2>쿠폰이 지급되었습니다</h2>
+                <p class="review-modal-desc">
+                    신청하신 <strong>{{ reward_notice.item.name }}</strong>이 보호 이메일로 발송되었습니다.
+                    이메일을 확인해주세요.
+                </p>
+            {% elif reward_notice.status == "rejected" %}
+                <div class="review-modal-icon rejected">↩️</div>
+                <p class="review-modal-eyebrow">REWARD REJECTED</p>
+                <h2>쿠폰 신청이 반려되었습니다</h2>
+                <p class="review-modal-desc">
+                    신청하신 <strong>{{ reward_notice.item.name }}</strong>이 반려되었습니다.
+                    차감된 포인트는 환불되었습니다.
+                </p>
+            {% endif %}
+
+            <div class="review-route-title">
+                {{ reward_notice.item.name }}
+            </div>
+
+            {% if reward_notice.admin_note %}
+                <div class="review-note-box">
+                    {{ reward_notice.admin_note|linebreaksbr }}
+                </div>
+            {% else %}
+                <div class="review-note-box">
+                    자세한 내용은 보호 이메일 또는 포인트 내역에서 확인해주세요.
+                </div>
+            {% endif %}
+
+            <div class="review-modal-actions">
+                <form method="post" action="{% url 'points:read_reward_notice' reward_notice.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="review-modal-button">확인</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% elif user.is_authenticated and ad_reward_notice %}
+    <div class="review-modal-backdrop" id="adRewardNoticeModal">
+        <div class="review-modal-card">
+            {% if ad_reward_notice.status == "approved" %}
+                <div class="review-modal-icon approved">💰</div>
+                <p class="review-modal-eyebrow">POINT PAID</p>
+                <h2>광고 포인트가 지급되었습니다</h2>
+                <p class="review-modal-desc">
+                    <strong>{{ ad_reward_notice.points }}P</strong>가 지급되었습니다.
+                </p>
+            {% elif ad_reward_notice.status == "rejected" %}
+                <div class="review-modal-icon rejected">🚫</div>
+                <p class="review-modal-eyebrow">POINT REJECTED</p>
+                <h2>광고 포인트 신청이 반려되었습니다</h2>
+                <p class="review-modal-desc">
+                    관리자 확인 결과 포인트 지급이 반려되었습니다.
+                </p>
+            {% endif %}
+
+            <div class="review-route-title">
+                {{ ad_reward_notice.campaign.title }}
+            </div>
+
+            {% if ad_reward_notice.admin_note %}
+                <div class="review-note-box">
+                    {{ ad_reward_notice.admin_note|linebreaksbr }}
+                </div>
+            {% else %}
+                <div class="review-note-box">
+                    포인트 내역에서 처리 결과를 확인할 수 있습니다.
+                </div>
+            {% endif %}
+
+            <div class="review-modal-actions">
+                <form method="post" action="{% url 'points:read_ad_notice' ad_reward_notice.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="review-modal-button">확인</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <script src="{% static 'posts/posts.js' %}?v=20260505_pointshop_base_2"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const profileMenu = document.getElementById("prProfileMenu");
+            const profileTrigger = document.getElementById("prProfileTrigger");
+
+            if (!profileMenu || !profileTrigger) {
+                return;
+            }
+
+            profileTrigger.addEventListener("click", function (event) {
+                event.stopPropagation();
+
+                const isOpen = profileMenu.classList.toggle("is-open");
+                profileTrigger.setAttribute("aria-expanded", isOpen ? "true" : "false");
+            });
+
+            document.addEventListener("click", function (event) {
+                if (!profileMenu.contains(event.target)) {
+                    profileMenu.classList.remove("is-open");
+                    profileTrigger.setAttribute("aria-expanded", "false");
+                }
+            });
+
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Escape") {
+                    profileMenu.classList.remove("is-open");
+                    profileTrigger.setAttribute("aria-expanded", "false");
+                }
+            });
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

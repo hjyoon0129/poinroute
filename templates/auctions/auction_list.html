@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'auctions/auctions.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="auction-page">
+    <div class="auction-hero">
+        <div>
+            <p class="auction-eyebrow">ROUTE REQUEST</p>
+            <h1>루트 의뢰</h1>
+            <p>
+                포인트를 걸고 여행 코스를 의뢰해보세요.
+                마음에 드는 답변 1개를 채택하면 보상 포인트가 답변자에게 지급됩니다.
+            </p>
+        </div>
+
+        <div class="auction-hero-action">
+            {% if user.is_authenticated %}
+                <a href="{% url 'auctions:create' %}" class="auction-primary-btn">의뢰 등록</a>
+            {% else %}
+                <a href="{% url 'accounts:login' %}" class="auction-primary-btn">로그인 후 의뢰</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if messages %}
+        <div class="auction-messages">
+            {% for message in messages %}
+                <div class="auction-message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="get" class="auction-filter">
+        <div class="auction-filter-field">
+            <label for="auctionStatus">상태</label>
+            <select id="auctionStatus" name="status" class="auction-select">
+                <option value="">전체</option>
+                {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if status == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="auction-filter-field">
+            <label for="auctionSort">정렬</label>
+            <select id="auctionSort" name="sort" class="auction-select">
+                {% for value, label in sort_choices %}
+                    <option value="{{ value }}" {% if sort == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="auction-filter-field search">
+            <label for="auctionSearch">검색</label>
+            <input
+                id="auctionSearch"
+                type="text"
+                name="q"
+                value="{{ query }}"
+                class="auction-input"
+                placeholder="목적지, 제목, 닉네임 검색"
+            >
+        </div>
+
+        <div class="auction-filter-actions">
+            <button type="submit" class="auction-search-btn">검색</button>
+            {% if status or query or sort != "latest" %}
+                <a href="{% url 'auctions:list' %}" class="auction-reset-btn">초기화</a>
+            {% endif %}
+        </div>
+    </form>
+
+    <div class="auction-list">
+        {% for auction in page_obj %}
+            <a href="{% url 'auctions:detail' auction.pk %}" class="auction-card">
+                <div class="auction-card-top">
+                    <span class="auction-status {{ auction.status }}">
+                        {{ auction.get_status_display }}
+                    </span>
+
+                    <strong class="auction-reward">
+                        {{ auction.reward_points }}P
+                    </strong>
+                </div>
+
+                <h2>{{ auction.title }}</h2>
+
+                <div class="auction-info-grid">
+                    <span>출발 {{ auction.start_area|default:"미정" }}</span>
+                    <span>목적지 {{ auction.destination }}</span>
+                    <span>이동 {{ auction.get_transport_display }}</span>
+                    <span>답변 {{ auction.active_answer_count|default:0 }}개</span>
+                </div>
+
+                <div class="auction-card-bottom">
+                    <span>{{ auction.author_nickname }}</span>
+                    <span>마감 {{ auction.deadline_at|date:"m-d H:i" }}</span>
+                </div>
+            </a>
+        {% empty %}
+            <div class="auction-empty">
+                아직 등록된 루트 의뢰가 없습니다.
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        <div class="auction-pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if status %}&status={{ status }}{% endif %}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">
+                    이전
+                </a>
+            {% endif %}
+
+            <span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if status %}&status={{ status }}{% endif %}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">
+                    다음
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

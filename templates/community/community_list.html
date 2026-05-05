@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'community/community.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="community-page">
+    <div class="community-hero">
+        <div class="community-hero-text">
+            <p class="community-eyebrow">POINROUTE COMMUNITY</p>
+            <h1>여행자 커뮤니티</h1>
+            <p>
+                여행 질문, 동행 모집, 여행 꿀팁, 자유 이야기를 나눠보세요.
+                닉네임과 레벨은 포인루트 프로필과 자동 연동됩니다.
+            </p>
+        </div>
+
+        <div class="community-hero-action">
+            {% if user.is_authenticated %}
+                <a href="{% url 'community:create' %}" class="community-write-btn">글쓰기</a>
+            {% else %}
+                <a href="{% url 'accounts:login' %}" class="community-write-btn">로그인 후 글쓰기</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if messages %}
+        <div class="community-messages">
+            {% for message in messages %}
+                <div class="community-message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="get" class="community-filter">
+        <div class="community-filter-field category">
+            <label for="communityCategory">게시판</label>
+            <div class="community-select-shell" data-community-select>
+                <select id="communityCategory" name="category" class="community-native-select">
+                    <option value="">전체 게시판</option>
+                    {% for value, label in category_choices %}
+                        <option value="{{ value }}" {% if category == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="community-filter-field sort">
+            <label for="communitySort">정렬</label>
+            <div class="community-select-shell" data-community-select>
+                <select id="communitySort" name="sort" class="community-native-select">
+                    {% for value, label in sort_choices %}
+                        <option value="{{ value }}" {% if sort == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="community-filter-field search">
+            <label for="communitySearch">검색</label>
+            <input
+                id="communitySearch"
+                type="text"
+                name="q"
+                value="{{ query }}"
+                class="community-filter-input"
+                placeholder="제목, 내용, 닉네임 검색"
+            >
+        </div>
+
+        <div class="community-filter-actions">
+            <button type="submit" class="community-filter-btn">검색</button>
+
+            {% if category or query or sort != "latest" %}
+                <a href="{% url 'community:list' %}" class="community-reset-btn">초기화</a>
+            {% endif %}
+        </div>
+    </form>
+
+    <div class="community-board">
+        <div class="community-board-head">
+            <span class="community-head-no">번호</span>
+            <span class="community-head-title">게시글</span>
+            <span class="community-head-author">작성자</span>
+            <span class="community-head-comment">댓글</span>
+            <span class="community-head-like">추천</span>
+            <span class="community-head-view">조회</span>
+            <span class="community-head-date">작성일</span>
+        </div>
+
+        {% for post in page_obj %}
+            <a href="{% url 'community:detail' post.pk %}" class="community-row {% if post.is_hot_now %}is-hotline{% endif %}">
+                <div class="community-row-no {% if post.is_hot_now %}hot-no{% endif %}">
+                    {% if post.is_hot_now %}
+                        HOT
+                    {% else %}
+                        {{ forloop.revcounter }}
+                    {% endif %}
+                </div>
+
+                <div class="community-row-title">
+                    <div class="community-category-line">
+                        {% if post.is_notice %}
+                            <span class="community-notice-badge">공지</span>
+                        {% endif %}
+
+                        {% if post.is_hot_now %}
+                            <span class="community-hotline-badge">핫라인</span>
+                        {% endif %}
+
+                        <span class="community-category-badge">{{ post.get_category_display }}</span>
+
+                        {% if post.image %}
+                            <span class="community-image-mark">이미지</span>
+                        {% endif %}
+                    </div>
+
+                    <strong>
+                        {% if post.is_hot_now %}
+                            <span class="hotline-title-mark">🔥</span>
+                        {% endif %}
+                        {{ post.title }}
+                    </strong>
+                </div>
+
+                <div class="community-row-author">
+                    <div class="community-author-card">
+                        <strong>{{ post.author_nickname }}</strong>
+
+                        {% firstof post.author.profile.total_earned_points post.author.profile.points 0 as earned_points %}
+                        <span class="community-level-badge">
+                            {% if earned_points >= 10000 %}
+                                LV.5 루트 마스터
+                            {% elif earned_points >= 5000 %}
+                                LV.4 로컬 가이드
+                            {% elif earned_points >= 2000 %}
+                                LV.3 인기 여행자
+                            {% elif earned_points >= 500 %}
+                                LV.2 루트 탐험가
+                            {% else %}
+                                LV.1 초기 여행자
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="community-row-stat">
+                    {{ post.active_comment_count|default:0 }}
+                </div>
+
+                <div class="community-row-stat">
+                    {{ post.active_like_count|default:0 }}
+                </div>
+
+                <div class="community-row-stat">
+                    {{ post.views|default:0 }}
+                </div>
+
+                <div class="community-row-date">
+                    <span class="date">{{ post.created_at|date:"y-m-d" }}</span>
+                    <span class="time">{{ post.created_at|date:"H:i" }}</span>
+                </div>
+            </a>
+        {% empty %}
+            <div class="community-empty">
+                아직 등록된 커뮤니티 글이 없습니다.
+                첫 번째 이야기를 남겨보세요.
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        <div class="community-pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if category %}&category={{ category }}{% endif %}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">
+                    이전
+                </a>
+            {% endif %}
+
+            <span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if category %}&category={{ category }}{% endif %}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">
+                    다음
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const shells = document.querySelectorAll("[data-community-select]");
+
+    function closeAll(exceptShell) {
+        shells.forEach(function (shell) {
+            if (shell !== exceptShell) {
+                shell.classList.remove("is-open");
+            }
+        });
+    }
+
+    shells.forEach(function (shell) {
+        const select = shell.querySelector("select");
+        if (!select || shell.querySelector(".community-fake-select")) {
+            return;
+        }
+
+        select.classList.add("community-native-select");
+
+        const fake = document.createElement("div");
+        fake.className = "community-fake-select";
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "community-select-button";
+
+        const label = document.createElement("span");
+        label.className = "community-select-label";
+
+        const icon = document.createElement("span");
+        icon.className = "community-select-icon";
+        icon.setAttribute("aria-hidden", "true");
+
+        button.appendChild(label);
+        button.appendChild(icon);
+
+        const menu = document.createElement("div");
+        menu.className = "community-select-menu";
+
+        Array.from(select.options).forEach(function (option) {
+            const item = document.createElement("button");
+            item.type = "button";
+            item.className = "community-select-option";
+            item.dataset.value = option.value;
+            item.textContent = option.textContent;
+
+            if (option.selected) {
+                item.classList.add("is-selected");
+                label.textContent = option.textContent;
+            }
+
+            item.addEventListener("click", function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                select.value = option.value;
+                label.textContent = option.textContent;
+
+                menu.querySelectorAll(".community-select-option").forEach(function (optionButton) {
+                    optionButton.classList.remove("is-selected");
+                });
+
+                item.classList.add("is-selected");
+                shell.classList.remove("is-open");
+
+                select.dispatchEvent(new Event("change", { bubbles: true }));
+            });
+
+            menu.appendChild(item);
+        });
+
+        if (!label.textContent && select.options.length) {
+            label.textContent = select.options[select.selectedIndex]?.textContent || select.options[0].textContent;
+        }
+
+        button.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const isOpen = shell.classList.contains("is-open");
+
+            closeAll(shell);
+
+            if (isOpen) {
+                shell.classList.remove("is-open");
+            } else {
+                shell.classList.add("is-open");
+            }
+        });
+
+        fake.appendChild(button);
+        fake.appendChild(menu);
+        shell.appendChild(fake);
+    });
+
+    document.addEventListener("click", function () {
+        closeAll(null);
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            closeAll(null);
+        }
+    });
+});
+</script>
+{% endblock %}

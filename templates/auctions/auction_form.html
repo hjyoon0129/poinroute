@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'auctions/auctions.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="auction-page auction-form-page">
+    <div class="auction-form-card compact">
+        <div class="auction-form-head compact">
+            <div>
+                <p class="auction-eyebrow">REQUEST</p>
+                <h1>{{ title }}</h1>
+                <p>
+                    보상 포인트는 등록 즉시 예치됩니다. 답변을 채택하면 채택자에게 지급됩니다.
+                </p>
+            </div>
+
+            <a href="{% url 'auctions:list' %}" class="auction-back-btn compact">목록</a>
+        </div>
+
+        {% if form.errors %}
+            <div class="auction-form-errors">
+                입력 내용을 다시 확인해주세요.
+            </div>
+        {% endif %}
+
+        <form method="post" class="auction-form compact">
+            {% csrf_token %}
+
+            <div class="auction-form-row full">
+                <label for="{{ form.title.id_for_label }}">의뢰 제목</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <p class="auction-field-error">{{ form.title.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="auction-form-grid four">
+                <div class="auction-form-row">
+                    <label for="{{ form.start_area.id_for_label }}">출발지</label>
+                    {{ form.start_area }}
+                    {% if form.start_area.errors %}
+                        <p class="auction-field-error">{{ form.start_area.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="auction-form-row">
+                    <label for="{{ form.destination.id_for_label }}">목적지</label>
+                    {{ form.destination }}
+                    {% if form.destination.errors %}
+                        <p class="auction-field-error">{{ form.destination.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="auction-form-row">
+                    <label for="{{ form.travel_date.id_for_label }}">여행 예정일</label>
+                    {{ form.travel_date }}
+                    {% if form.travel_date.errors %}
+                        <p class="auction-field-error">{{ form.travel_date.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="auction-form-row">
+                    <label for="{{ form.people_count.id_for_label }}">인원</label>
+                    {{ form.people_count }}
+                    {% if form.people_count.errors %}
+                        <p class="auction-field-error">{{ form.people_count.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="auction-form-grid four">
+                <div class="auction-form-row">
+                    <label for="{{ form.transport.id_for_label }}">이동수단</label>
+                    <div class="auction-select-shell" data-auction-select>
+                        {{ form.transport }}
+                    </div>
+                    {% if form.transport.errors %}
+                        <p class="auction-field-error">{{ form.transport.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="auction-form-row">
+                    <label for="{{ form.budget.id_for_label }}">예산</label>
+                    {{ form.budget }}
+                    {% if form.budget.errors %}
+                        <p class="auction-field-error">{{ form.budget.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="auction-form-row">
+                    <label for="{{ form.reward_points.id_for_label }}">채택 보상 포인트</label>
+                    {{ form.reward_points }}
+                    {% if form.reward_points.errors %}
+                        <p class="auction-field-error">{{ form.reward_points.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="auction-form-row">
+                    <label for="{{ form.deadline_days.id_for_label }}">마감 기간</label>
+                    <div class="auction-select-shell" data-auction-select>
+                        {{ form.deadline_days }}
+                    </div>
+                    {% if form.deadline_days.errors %}
+                        <p class="auction-field-error">{{ form.deadline_days.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="auction-form-row full">
+                <label for="{{ form.request_detail.id_for_label }}">요청 내용</label>
+                {{ form.request_detail }}
+                <p class="auction-help">
+                    원하는 여행 스타일, 꼭 가고 싶은 곳, 피하고 싶은 장소, 예산 분위기 등을 적어주세요.
+                </p>
+                {% if form.request_detail.errors %}
+                    <p class="auction-field-error">{{ form.request_detail.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="auction-point-notice compact">
+                의뢰 등록 시 입력한 보상 포인트가 즉시 차감됩니다. 답변 채택 전 취소 가능 조건을 만족하면 환불됩니다.
+            </div>
+
+            <div class="auction-form-actions compact">
+                <button type="submit" class="auction-primary-btn">{{ submit_label }}</button>
+                <a href="{% url 'auctions:list' %}" class="auction-cancel-btn">취소</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const shells = document.querySelectorAll("[data-auction-select]");
+
+    function closeAll(exceptShell) {
+        shells.forEach(function (shell) {
+            if (shell !== exceptShell) {
+                shell.classList.remove("is-open");
+            }
+        });
+    }
+
+    shells.forEach(function (shell) {
+        const select = shell.querySelector("select");
+
+        if (!select || shell.querySelector(".auction-fake-select")) {
+            return;
+        }
+
+        select.classList.add("auction-native-select");
+
+        const fake = document.createElement("div");
+        fake.className = "auction-fake-select";
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "auction-select-button";
+
+        const label = document.createElement("span");
+        label.className = "auction-select-label";
+
+        const icon = document.createElement("span");
+        icon.className = "auction-select-icon";
+        icon.setAttribute("aria-hidden", "true");
+
+        button.appendChild(label);
+        button.appendChild(icon);
+
+        const menu = document.createElement("div");
+        menu.className = "auction-select-menu";
+
+        Array.from(select.options).forEach(function (option) {
+            const item = document.createElement("button");
+            item.type = "button";
+            item.className = "auction-select-option";
+            item.dataset.value = option.value;
+            item.textContent = option.textContent;
+
+            if (option.selected) {
+                item.classList.add("is-selected");
+                label.textContent = option.textContent;
+            }
+
+            item.addEventListener("click", function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                select.value = option.value;
+                label.textContent = option.textContent;
+
+                menu.querySelectorAll(".auction-select-option").forEach(function (optionButton) {
+                    optionButton.classList.remove("is-selected");
+                });
+
+                item.classList.add("is-selected");
+                shell.classList.remove("is-open");
+
+                select.dispatchEvent(new Event("change", { bubbles: true }));
+            });
+
+            menu.appendChild(item);
+        });
+
+        if (!label.textContent && select.options.length) {
+            label.textContent = select.options[select.selectedIndex]?.textContent || select.options[0].textContent;
+        }
+
+        button.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const isOpen = shell.classList.contains("is-open");
+
+            closeAll(shell);
+
+            if (isOpen) {
+                shell.classList.remove("is-open");
+            } else {
+                shell.classList.add("is-open");
+            }
+        });
+
+        fake.appendChild(button);
+        fake.appendChild(menu);
+        shell.appendChild(fake);
+    });
+
+    document.addEventListener("click", function () {
+        closeAll(null);
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            closeAll(null);
+        }
+    });
+});
+</script>
+{% endblock %}

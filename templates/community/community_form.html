@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'community/community.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="community-page">
+    <div class="community-form-card">
+        <div class="community-form-head">
+            <div>
+                <p class="community-eyebrow">COMMUNITY</p>
+                <h1>{{ form_title }}</h1>
+                <p>
+                    닉네임과 레벨은 현재 포인루트 프로필 기준으로 표시됩니다.
+                </p>
+            </div>
+
+            <a href="{% url 'community:list' %}" class="community-back-btn">목록</a>
+        </div>
+
+        {% if user.is_authenticated %}
+            <div class="community-current-author">
+                <span class="label">작성자</span>
+                <strong>
+                    {% if user.profile.nickname %}
+                        {{ user.profile.nickname }}
+                    {% elif user.username %}
+                        {{ user.username }}
+                    {% elif user.email %}
+                        {{ user.email }}
+                    {% else %}
+                        여행자
+                    {% endif %}
+                </strong>
+
+                {% firstof user.profile.total_earned_points user.profile.points 0 as my_earned_points %}
+                <span class="community-level-badge">
+                    {% if my_earned_points >= 10000 %}
+                        LV.5 루트 마스터
+                    {% elif my_earned_points >= 5000 %}
+                        LV.4 로컬 가이드
+                    {% elif my_earned_points >= 2000 %}
+                        LV.3 인기 여행자
+                    {% elif my_earned_points >= 500 %}
+                        LV.2 루트 탐험가
+                    {% else %}
+                        LV.1 초기 여행자
+                    {% endif %}
+                </span>
+            </div>
+        {% endif %}
+
+        {% if form.errors %}
+            <div class="community-form-errors">
+                입력 내용을 다시 확인해주세요.
+            </div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" class="community-form">
+            {% csrf_token %}
+
+            <div class="community-form-row">
+                <label for="{{ form.category.id_for_label }}">카테고리</label>
+                <div class="community-select-shell" data-community-select>
+                    {{ form.category }}
+                </div>
+                {% if form.category.errors %}
+                    <p class="community-field-error">{{ form.category.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="community-form-row">
+                <label for="{{ form.title.id_for_label }}">제목</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <p class="community-field-error">{{ form.title.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="community-form-row">
+                <label for="{{ form.content.id_for_label }}">내용</label>
+                {{ form.content }}
+                {% if form.content.errors %}
+                    <p class="community-field-error">{{ form.content.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="community-form-row">
+                <label for="{{ form.image.id_for_label }}">이미지</label>
+                {{ form.image }}
+                {% if form.image.errors %}
+                    <p class="community-field-error">{{ form.image.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="community-form-actions">
+                <button type="submit" class="community-submit-btn">{{ submit_label }}</button>
+                <a href="{% url 'community:list' %}" class="community-cancel-btn">취소</a>
+            </div>
+        </form>
+    </div>
+</section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const shells = document.querySelectorAll("[data-community-select]");
+
+    function closeAll(exceptShell) {
+        shells.forEach(function (shell) {
+            if (shell !== exceptShell) {
+                shell.classList.remove("is-open");
+            }
+        });
+    }
+
+    shells.forEach(function (shell) {
+        const select = shell.querySelector("select");
+        if (!select || shell.querySelector(".community-fake-select")) {
+            return;
+        }
+
+        select.classList.add("community-native-select");
+
+        const fake = document.createElement("div");
+        fake.className = "community-fake-select";
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "community-select-button";
+
+        const label = document.createElement("span");
+        label.className = "community-select-label";
+
+        const icon = document.createElement("span");
+        icon.className = "community-select-icon";
+        icon.setAttribute("aria-hidden", "true");
+
+        button.appendChild(label);
+        button.appendChild(icon);
+
+        const menu = document.createElement("div");
+        menu.className = "community-select-menu";
+
+        Array.from(select.options).forEach(function (option) {
+            const item = document.createElement("button");
+            item.type = "button";
+            item.className = "community-select-option";
+            item.dataset.value = option.value;
+            item.textContent = option.textContent;
+
+            if (option.selected) {
+                item.classList.add("is-selected");
+                label.textContent = option.textContent;
+            }
+
+            item.addEventListener("click", function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                select.value = option.value;
+                label.textContent = option.textContent;
+
+                menu.querySelectorAll(".community-select-option").forEach(function (optionButton) {
+                    optionButton.classList.remove("is-selected");
+                });
+
+                item.classList.add("is-selected");
+                shell.classList.remove("is-open");
+
+                select.dispatchEvent(new Event("change", { bubbles: true }));
+            });
+
+            menu.appendChild(item);
+        });
+
+        if (!label.textContent && select.options.length) {
+            label.textContent = select.options[select.selectedIndex]?.textContent || select.options[0].textContent;
+        }
+
+        button.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const isOpen = shell.classList.contains("is-open");
+
+            closeAll(shell);
+
+            if (isOpen) {
+                shell.classList.remove("is-open");
+            } else {
+                shell.classList.add("is-open");
+            }
+        });
+
+        fake.appendChild(button);
+        fake.appendChild(menu);
+        shell.appendChild(fake);
+    });
+
+    document.addEventListener("click", function () {
+        closeAll(null);
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            closeAll(null);
+        }
+    });
+});
+</script>
+{% endblock %}

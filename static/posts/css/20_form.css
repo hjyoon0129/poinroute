@@ -1,0 +1,632 @@
+.form-shell {
+    max-width: 1080px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 28px;
+    padding: 48px;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid rgba(223, 229, 240, 0.9);
+}
+
+.form-heading {
+    text-align: center;
+    margin-bottom: 34px;
+}
+
+.form-heading h1 {
+    margin: 0;
+    font-size: 36px;
+    line-height: 1.2;
+    letter-spacing: -0.055em;
+    font-weight: 950;
+}
+
+.form-heading p:last-child {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: 15px;
+    font-weight: 650;
+}
+
+.form-error-box {
+    background: var(--danger-bg);
+    border: 1px solid #ffd4d8;
+    color: #d92d3c;
+    padding: 16px 18px;
+    border-radius: 14px;
+    margin-bottom: 26px;
+}
+
+.summary-panel {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    gap: 22px;
+    align-items: center;
+    background: #f8faff;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 23px 28px;
+    margin-bottom: 46px;
+}
+
+.summary-item {
+    text-align: center;
+}
+
+.summary-item span {
+    display: block;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 7px;
+}
+
+.summary-item strong {
+    font-size: 25px;
+    color: var(--main-blue);
+    letter-spacing: -0.04em;
+}
+
+.summary-divider {
+    height: 48px;
+    background: var(--line);
+}
+
+.form-section {
+    margin-top: 50px;
+}
+
+.section-title {
+    display: flex;
+    gap: 13px;
+    align-items: flex-start;
+    padding-bottom: 17px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 26px;
+}
+
+.section-title > span {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    display: grid;
+    place-items: center;
+    border-radius: 11px;
+    background: var(--main-blue);
+    color: white;
+    font-size: 15px;
+    font-weight: 900;
+}
+
+.section-title h2 {
+    margin: 0;
+    font-size: 23px;
+    letter-spacing: -0.04em;
+    font-weight: 950;
+}
+
+.section-title p {
+    margin: 5px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.form-grid {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.grid-1-2 {
+    grid-template-columns: 1fr 2fr;
+}
+
+.grid-2 {
+    grid-template-columns: 1fr 1fr;
+}
+
+.grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.grid-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.grid-location {
+    grid-template-columns: 1fr 1fr 1fr 1.35fr;
+}
+
+.grid-time-cost {
+    grid-template-columns: 1.5fr 1fr;
+}
+
+.field-box label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 850;
+    color: #111827;
+}
+
+.destination-field-box .form-input-clean {
+    border-color: var(--dest-border);
+    background: #fffdf7;
+}
+
+.thumbnail-uploader {
+    display: grid;
+    grid-template-columns: 330px minmax(0, 1fr);
+    gap: 20px;
+    align-items: stretch;
+    background: #f8faff;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 18px;
+    margin-bottom: 20px;
+}
+
+.thumbnail-preview {
+    width: 100%;
+    height: 220px;
+    min-height: 220px;
+    max-height: 220px;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 18px;
+    border: 1px dashed #cfd7ea;
+    background: #eef2ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.thumbnail-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.thumbnail-placeholder {
+    text-align: center;
+    color: var(--muted);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.thumbnail-placeholder span {
+    color: #344054;
+    font-weight: 850;
+}
+
+.thumbnail-meta,
+.place-image-control {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+}
+
+.upload-button-row,
+.place-image-button-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    min-height: 44px;
+}
+
+.upload-button-row > *,
+.place-image-button-row > * {
+    flex-shrink: 0;
+}
+
+.upload-trigger,
+.mini-upload-trigger,
+.upload-clear-btn,
+.place-image-clear-btn {
+    appearance: none;
+    -webkit-appearance: none;
+    box-sizing: border-box;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    vertical-align: middle;
+    width: fit-content;
+    min-height: 44px;
+    height: 44px;
+    padding: 0 18px;
+    margin: 0;
+    line-height: 44px;
+    font-size: 14px;
+    font-weight: 850;
+    border-radius: 13px;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.upload-trigger,
+.mini-upload-trigger {
+    border: 1px solid transparent;
+    background: var(--main-blue);
+    color: #fff;
+}
+
+.upload-clear-btn,
+.place-image-clear-btn {
+    border: 1px solid #ffd0d5;
+    background: #fff8f9;
+    color: var(--danger);
+}
+
+.thumbnail-native-widget,
+.place-image-native-widget {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    clip: rect(0, 0, 0, 0) !important;
+}
+
+.upload-file-name,
+.place-image-file-name {
+    display: block;
+    margin-top: 10px;
+    margin-bottom: 0;
+    color: #344054;
+    font-size: 14px;
+    font-weight: 750;
+    line-height: 1.4;
+}
+
+.upload-hint,
+.place-image-hint {
+    display: block;
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.4;
+}
+
+.place-image-control {
+    min-height: 112px;
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    background: #fff;
+}
+
+.visit-time-row {
+    display: grid;
+    grid-template-columns: 132px 1fr;
+    gap: 10px;
+}
+
+.map-input-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 124px;
+    gap: 12px;
+    align-items: stretch;
+}
+
+.map-input-row .form-input-clean,
+.map-input-row input {
+    width: 100%;
+}
+
+.map-open-btn,
+.primary-mini-btn {
+    min-height: 52px;
+    border: 0;
+    border-radius: 13px;
+    background: var(--main-blue);
+    color: white;
+    font-size: 14px;
+    font-weight: 850;
+    cursor: pointer;
+    box-shadow: 0 12px 22px rgba(49, 87, 246, 0.18);
+}
+
+.map-open-btn {
+    white-space: nowrap;
+}
+
+.place-container {
+    display: grid;
+    gap: 22px;
+}
+
+.place-form-card {
+    position: relative;
+    padding: 30px;
+    border-radius: 22px;
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, #fbfcff, #ffffff);
+    box-shadow: 0 14px 32px rgba(17, 24, 39, 0.045);
+}
+
+.place-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+}
+
+.place-number {
+    margin: 0;
+    color: var(--main-blue);
+    font-size: 18px;
+    font-weight: 950;
+}
+
+.remove-btn {
+    border: 1px solid #ffd0d5;
+    background: #fff8f9;
+    color: var(--danger);
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.hidden-fields {
+    display: none;
+}
+
+.place-full-row {
+    width: 100%;
+    margin-bottom: 18px;
+}
+
+.place-full-row:last-child {
+    margin-bottom: 0;
+}
+
+.place-full-row textarea.form-input-clean {
+    width: 100%;
+    min-height: 130px;
+}
+
+.place-image-wide {
+    width: 100%;
+    min-height: auto;
+    padding: 18px;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.add-place-btn {
+    width: 100%;
+    min-height: 64px;
+    margin-top: 24px;
+    border: 1.5px dashed rgba(49, 87, 246, 0.55);
+    border-radius: 18px;
+    background: #fff;
+    color: var(--main-blue);
+    font-size: 16px;
+    font-weight: 850;
+    cursor: pointer;
+}
+
+.form-actions {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 16px;
+    margin-top: 34px;
+}
+
+.secondary-btn,
+.primary-btn {
+    min-height: 58px;
+    border: 0;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    font-size: 16px;
+    font-weight: 850;
+    cursor: pointer;
+}
+
+.secondary-btn {
+    background: #eef1f6;
+    color: #4b5563;
+}
+
+.primary-btn {
+    background: var(--main-blue);
+    color: #fff;
+    box-shadow: 0 14px 26px rgba(49, 87, 246, 0.2);
+}
+
+/* =========================================================
+   기본정보 출발지 지도 위치
+   ========================================================= */
+
+.start-map-field {
+    margin: 2px 0 20px;
+}
+
+.start-map-input-row {
+    grid-template-columns: minmax(0, 1fr) 150px;
+}
+
+.start-map-display {
+    background: #fbfcff;
+    cursor: default;
+}
+
+.start-map-display::placeholder {
+    color: #8f9bad;
+}
+
+.start-map-open-btn {
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .start-map-input-row {
+        grid-template-columns: 1fr;
+    }
+
+    .start-map-open-btn {
+        width: 100%;
+    }
+}
+
+/* =========================================================
+   기본정보 영역 버튼/검색줄 정렬 최종 보정
+   - 이미지 선택 label 공통 label 스타일 충돌 방지
+   - 출발지 지도 검색 input/button 높이 통일
+   ========================================================= */
+
+/* 이미지 선택 label이 field-box label 기본 스타일을 먹는 문제 방지 */
+.field-box label.upload-trigger,
+.field-box label.mini-upload-trigger,
+.thumbnail-meta label.upload-trigger,
+.place-image-control label.mini-upload-trigger {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: fit-content !important;
+    min-width: 96px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    margin: 0 !important;
+    padding: 0 18px !important;
+    border: 1px solid transparent !important;
+    border-radius: 13px !important;
+    background: var(--main-blue) !important;
+    color: #ffffff !important;
+    font-size: 14px !important;
+    font-weight: 850 !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+}
+
+/* 이미지 삭제 버튼과 이미지 선택 버튼 높이 완전 통일 */
+.upload-clear-btn,
+.place-image-clear-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: fit-content !important;
+    min-width: 96px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    margin: 0 !important;
+    padding: 0 18px !important;
+    border-radius: 13px !important;
+    font-size: 14px !important;
+    font-weight: 850 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+}
+
+/* 이미지 버튼 줄 정렬 */
+.upload-button-row,
+.place-image-button-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+    min-height: 44px !important;
+}
+
+/* 대표 썸네일 오른쪽 영역 정렬 */
+.thumbnail-meta {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    gap: 12px !important;
+}
+
+/* 출발지 지도 위치 검색줄 */
+.start-map-row,
+.start-map-search-row,
+.start-location-map-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 150px !important;
+    gap: 12px !important;
+    align-items: stretch !important;
+    width: 100% !important;
+}
+
+/* 출발지 지도 위치 input */
+.start-map-row input,
+.start-map-search-row input,
+.start-location-map-row input,
+#id_start_place_name {
+    width: 100% !important;
+    height: 54px !important;
+    min-height: 54px !important;
+    padding: 0 16px !important;
+    border: 1px solid var(--line-strong) !important;
+    border-radius: 13px !important;
+    background: #ffffff !important;
+    color: var(--text) !important;
+    font-size: 14px !important;
+    font-weight: 650 !important;
+    box-sizing: border-box !important;
+}
+
+/* 출발지 지도 검색 버튼 */
+.start-map-btn,
+.start-map-search-btn,
+.start-location-map-btn,
+#start-map-open-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 54px !important;
+    min-height: 54px !important;
+    padding: 0 18px !important;
+    border: 0 !important;
+    border-radius: 13px !important;
+    background: var(--main-blue) !important;
+    color: #ffffff !important;
+    font-size: 14px !important;
+    font-weight: 850 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+    box-shadow: 0 12px 22px rgba(49, 87, 246, 0.18) !important;
+    box-sizing: border-box !important;
+}
+
+/* 모바일에서는 출발지 검색 input/button 세로 정렬 */
+@media (max-width: 768px) {
+    .start-map-row,
+    .start-map-search-row,
+    .start-location-map-row {
+        grid-template-columns: 1fr !important;
+    }
+
+    .start-map-btn,
+    .start-map-search-btn,
+    .start-location-map-btn,
+    #start-map-open-btn {
+        width: 100% !important;
+    }
+
+    .field-box label.upload-trigger,
+    .field-box label.mini-upload-trigger,
+    .thumbnail-meta label.upload-trigger,
+    .place-image-control label.mini-upload-trigger,
+    .upload-clear-btn,
+    .place-image-clear-btn {
+        width: 100% !important;
+    }
+}

@@ -1,0 +1,1366 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=b131d128b1f566daa4a809b7fa5e61a9&libraries=services"></script>
+
+<section class="course-detail-shell">
+    {% if messages %}
+        <div class="detail-message-list">
+            {% for message in messages %}
+                <div class="detail-message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="detail-top-actions">
+        <a href="{% url 'posts:list' %}" class="pill-btn light">← 목록으로</a>
+
+        {% if can_edit_post %}
+        <div class="detail-action-group">
+            <a href="{% url 'posts:update' post.pk %}" class="pill-btn soft">✏️ 수정하기</a>
+            <form action="{% url 'posts:delete' post.pk %}" method="POST" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                {% csrf_token %}
+                <button type="submit" class="pill-btn danger">🗑️ 삭제하기</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    <header class="detail-hero">
+        <div class="detail-theme-chip">{{ post.get_theme_display }}</div>
+        <h1 class="detail-title">{{ post.title }}</h1>
+
+        <div class="detail-rating-summary {% if not post.has_rating %}empty{% endif %}">
+            {% if post.has_rating %}
+                <span
+                    class="pr-star-row pr-star-row-detail"
+                    data-rating="{{ post.rating_avg_display }}"
+                    aria-label="별점 {{ post.rating_avg_display }}점"
+                ></span>
+                <strong>{{ post.rating_avg_display }}</strong>
+                <span class="rating-count-text">({{ post.rating_count }})</span>
+            {% else %}
+                <span
+                    class="pr-star-row pr-star-row-detail is-empty"
+                    data-rating="0"
+                    aria-label="리뷰 없음"
+                ></span>
+                <span class="rating-count-text">아직 등록된 평점이 없습니다</span>
+            {% endif %}
+        </div>
+
+        <div class="detail-author-row">
+            <span class="detail-author-avatar">👤</span>
+            <span class="detail-author-name">{{ post.author_nickname }}</span>
+            <span class="detail-author-dot">·</span>
+            <span class="detail-like-count">👍 추천 {{ post.likes_total|default:0 }}</span>
+            <span class="detail-author-dot">·</span>
+            <span class="detail-view-count">👀 조회 {{ post.views }}</span>
+        </div>
+
+        <form method="POST" action="{% url 'posts:like' post.pk %}" class="detail-like-form">
+            {% csrf_token %}
+            <button type="submit" class="detail-like-btn{% if liked_by_current_visitor %} is-liked{% endif %}">
+                {% if liked_by_current_visitor %}
+                    👍 이미 추천한 루트
+                {% else %}
+                    👍 이 루트 추천하기
+                {% endif %}
+            </button>
+        </form>
+
+        {% if post.travel_start_date and post.travel_end_date %}
+            <p class="detail-date-range">
+                여행 기간: {{ post.travel_start_date|date:"Y.m.d" }} ~ {{ post.travel_end_date|date:"Y.m.d" }}
+            </p>
+        {% endif %}
+
+        <div class="detail-stat-row">
+            <div class="detail-stat-chip">
+                🚗
+                {% if post.start_region or post.start_district %}
+                    {{ post.start_region }} {{ post.start_district }} 출발
+                {% else %}
+                    출발지 미정
+                {% endif %}
+            </div>
+
+            {% if post.start_time %}
+                <div class="detail-stat-chip">⏰ {{ post.start_time }} 출발</div>
+            {% endif %}
+
+            <div class="detail-stat-chip">🎯 {{ post.destination }} 도착</div>
+            <div class="detail-stat-chip accent">🧭 {{ post.total_time }}</div>
+            <div class="detail-stat-chip accent">💰 총 {{ post.total_cost }}원</div>
+        </div>
+    </header>
+
+    <!-- 모바일 전용 슬라이더 -->
+    <section class="mobile-route-slider-shell">
+        <div class="mobile-slide-hint">
+            <span>옆으로 넘겨서 일정 보기</span>
+            <b>← swipe →</b>
+        </div>
+
+        <div class="mobile-route-slider" id="mobileRouteSlider">
+            <article class="mobile-route-slide">
+                <section class="mobile-slide-card mobile-map-slide-card">
+                    <div class="detail-card-head">
+                        <div>
+                            <p class="eyebrow">POINROUTE MAP</p>
+                            <h3>전체 루트 지도</h3>
+                        </div>
+                    </div>
+
+                    <div id="mobile-course-map" class="detail-map mobile-detail-map">
+                        <div class="map-empty-state">지도 정보를 불러오는 중입니다.</div>
+                    </div>
+
+                    <div class="mobile-flow-box">
+                        <div class="detail-card-head flow-head">
+                            <div>
+                                <p class="eyebrow">ROUTE FLOW</p>
+                                <h3>루트 순서</h3>
+                            </div>
+                        </div>
+
+                        <ol class="route-sequence route-sequence-grouped mobile-route-sequence">
+                            <li class="route-sequence-item is-start">
+                                <span class="route-seq-no start">S</span>
+                                <div>
+                                    <strong>
+                                        {% if post.start_place_name %}
+                                            {{ post.start_place_name }} 출발
+                                        {% elif post.start_region or post.start_district %}
+                                            {{ post.start_region }} {{ post.start_district }} 출발
+                                        {% else %}
+                                            출발지 미정
+                                        {% endif %}
+                                    </strong>
+
+                                    {% if post.start_time %}
+                                        <small>{{ post.start_time }}</small>
+                                    {% endif %}
+                                </div>
+                            </li>
+
+                            {% for group in grouped_places %}
+                                <li class="route-day-divider">
+                                    <span>{{ group.day }}일차</span>
+                                    <em>사용돈 {{ group.daily_cost }}원</em>
+                                </li>
+
+                                {% for place in group.places %}
+                                <li class="route-sequence-item">
+                                    <span class="route-seq-no">{{ forloop.counter }}</span>
+                                    <div>
+                                        <strong>{{ place.place_name }}</strong>
+                                        <small>
+                                            {% if place.visit_time_str %}{{ place.visit_time_str }}{% else %}시간 미정{% endif %}
+                                            {% if place.cost > 0 %} · {{ place.cost }}원{% endif %}
+                                        </small>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            {% endfor %}
+
+                            <li class="route-sequence-item is-end">
+                                <span class="route-seq-no end">E</span>
+                                <div>
+                                    <strong>{{ post.destination }} 도착</strong>
+                                </div>
+                            </li>
+                        </ol>
+                    </div>
+                </section>
+            </article>
+
+            {% for group in grouped_places %}
+            <article class="mobile-route-slide">
+                <section class="mobile-slide-card mobile-day-slide-card">
+                    <div class="mobile-day-slide-head">
+                        <span class="day-badge">{{ group.day }}일차</span>
+                        <span class="day-cost-badge">사용돈 {{ group.daily_cost }}원</span>
+                    </div>
+
+                    <div class="route-card-list mobile-route-card-list">
+                        {% for place in group.places %}
+                        <article class="route-card route-card-clean mobile-route-card">
+                            <div class="route-card-media">
+                                {% if place.image %}
+                                    <img src="{{ place.image.url }}" alt="{{ place.place_name }}">
+                                {% else %}
+                                    <div class="route-card-noimg">No Image</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="route-card-body">
+                                <div class="route-card-topline">
+                                    <span class="route-card-label">방문장소</span>
+                                    <div class="route-card-facts">
+                                        {% if place.visit_time_str %}
+                                            <span>⏰ {{ place.visit_time_str }}</span>
+                                        {% endif %}
+                                        {% if place.cost > 0 %}
+                                            <span>💰 {{ place.cost }}원</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <h3 class="route-card-title">{{ place.place_name }}</h3>
+                                <p class="route-card-desc">{{ place.description|default:"아직 설명이 등록되지 않았어요."|linebreaksbr }}</p>
+                            </div>
+                        </article>
+                        {% endfor %}
+                    </div>
+                </section>
+            </article>
+            {% empty %}
+            <article class="mobile-route-slide">
+                <section class="mobile-slide-card">
+                    <div class="empty-detail-message">
+                        등록된 루트가 없습니다.
+                    </div>
+                </section>
+            </article>
+            {% endfor %}
+
+            <article class="mobile-route-slide">
+                <section class="mobile-slide-card mobile-review-slide-card">
+                    <div class="route-review-head">
+                        <div>
+                            <p class="eyebrow">ROUTE REVIEW</p>
+                            <h2>루트 리뷰</h2>
+                        </div>
+
+                        <div class="route-review-score-card {% if not post.has_rating %}empty{% endif %}">
+                            {% if post.has_rating %}
+                                <span
+                                    class="pr-star-row pr-star-row-review"
+                                    data-rating="{{ post.rating_avg_display }}"
+                                    aria-label="별점 {{ post.rating_avg_display }}점"
+                                ></span>
+                                <strong>{{ post.rating_avg_display }}</strong>
+                                <span class="rating-count-text">({{ post.rating_count }})</span>
+                            {% else %}
+                                <strong>0.0</strong>
+                                <span class="rating-count-text">리뷰 없음</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="route-review-form-card">
+                        {% if user.is_authenticated %}
+                            {% if post.author_id == user.id %}
+                                <div class="route-review-login-box">
+                                    본인이 작성한 루트에는 리뷰를 남길 수 없습니다.
+                                </div>
+                            {% else %}
+                                <form method="POST" action="{% url 'posts:review' post.pk %}" class="route-review-form">
+                                    {% csrf_token %}
+
+                                    <div class="review-star-input">
+                                        <input type="radio" name="rating" id="mobile_rating5" value="5" required>
+                                        <label for="mobile_rating5">★</label>
+
+                                        <input type="radio" name="rating" id="mobile_rating4" value="4">
+                                        <label for="mobile_rating4">★</label>
+
+                                        <input type="radio" name="rating" id="mobile_rating3" value="3">
+                                        <label for="mobile_rating3">★</label>
+
+                                        <input type="radio" name="rating" id="mobile_rating2" value="2">
+                                        <label for="mobile_rating2">★</label>
+
+                                        <input type="radio" name="rating" id="mobile_rating1" value="1">
+                                        <label for="mobile_rating1">★</label>
+                                    </div>
+
+                                    <textarea
+                                        name="comment"
+                                        class="route-review-textarea"
+                                        placeholder="이 루트가 어땠는지 리뷰를 남겨주세요."
+                                        maxlength="1000"
+                                    ></textarea>
+
+                                    <button type="submit" class="route-review-submit">
+                                        별점 리뷰 등록하기
+                                    </button>
+                                </form>
+                            {% endif %}
+                        {% else %}
+                            <div class="route-review-login-box">
+                                리뷰를 남기려면 로그인이 필요합니다.
+                                <a href="{% url 'accounts:login' %}?next={{ request.get_full_path }}">로그인하기</a>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="route-review-list">
+                        {% for review in post.active_reviews %}
+                            <article class="route-review-card">
+                                <div class="route-review-card-top">
+                                    <div class="route-review-author-box">
+                                        <strong>{{ review.author_nickname }}</strong>
+                                        <span class="route-review-date">{{ review.created_at|date:"Y.m.d H:i" }}</span>
+                                    </div>
+
+                                    <div class="route-review-card-score">
+                                        <span
+                                            class="pr-star-row pr-star-row-review-card"
+                                            data-rating="{{ review.rating }}"
+                                            aria-label="별점 {{ review.rating }}점"
+                                        ></span>
+                                        <b>{{ review.rating }}.0</b>
+                                    </div>
+                                </div>
+
+                                {% if review.comment %}
+                                    <p>{{ review.comment|linebreaksbr }}</p>
+                                {% else %}
+                                    <p class="empty-comment">별점만 남긴 리뷰입니다.</p>
+                                {% endif %}
+                            </article>
+                        {% empty %}
+                            <div class="route-review-empty">
+                                아직 리뷰가 없습니다. 첫 리뷰를 남겨보세요.
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            </article>
+        </div>
+
+        <div class="mobile-slide-dots" id="mobileSlideDots"></div>
+    </section>
+
+    <!-- PC / 태블릿 기본 레이아웃 -->
+    <div class="detail-layout desktop-detail-layout">
+        <aside class="detail-sidebar route-sticky-panel">
+            <section class="detail-card route-map-flow-card">
+                <div class="route-map-area">
+                    <div class="detail-card-head">
+                        <div>
+                            <p class="eyebrow">POINROUTE MAP</p>
+                            <h3>전체 루트 지도</h3>
+                        </div>
+                    </div>
+
+                    <div id="course-map" class="detail-map">
+                        <div class="map-empty-state">지도 정보를 불러오는 중입니다.</div>
+                    </div>
+                </div>
+
+                <div class="route-flow-area">
+                    <div class="detail-card-head flow-head">
+                        <div>
+                            <p class="eyebrow">ROUTE FLOW</p>
+                            <h3>루트 순서</h3>
+                        </div>
+                    </div>
+
+                    <ol class="route-sequence route-sequence-grouped">
+                        <li class="route-sequence-item is-start">
+                            <span class="route-seq-no start">S</span>
+                            <div>
+                                <strong>
+                                    {% if post.start_place_name %}
+                                        {{ post.start_place_name }} 출발
+                                    {% elif post.start_region or post.start_district %}
+                                        {{ post.start_region }} {{ post.start_district }} 출발
+                                    {% else %}
+                                        출발지 미정
+                                    {% endif %}
+                                </strong>
+
+                                {% if post.start_time %}
+                                    <small>{{ post.start_time }}</small>
+                                {% endif %}
+                            </div>
+                        </li>
+
+                        {% for group in grouped_places %}
+                            <li class="route-day-divider">
+                                <span>{{ group.day }}일차</span>
+                                <em>사용돈 {{ group.daily_cost }}원</em>
+                            </li>
+
+                            {% for place in group.places %}
+                            <li class="route-sequence-item">
+                                <span class="route-seq-no">{{ forloop.counter }}</span>
+                                <div>
+                                    <strong>{{ place.place_name }}</strong>
+                                    <small>
+                                        {% if place.visit_time_str %}{{ place.visit_time_str }}{% else %}시간 미정{% endif %}
+                                        {% if place.cost > 0 %} · {{ place.cost }}원{% endif %}
+                                    </small>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        {% endfor %}
+
+                        <li class="route-sequence-item is-end">
+                            <span class="route-seq-no end">E</span>
+                            <div>
+                                <strong>{{ post.destination }} 도착</strong>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+            </section>
+        </aside>
+
+        <main class="detail-content">
+            {% for group in grouped_places %}
+            <section class="day-group">
+                <div class="day-group-head compact-day-head">
+                    <span class="day-badge">{{ group.day }}일차</span>
+                    <span class="day-cost-badge">사용돈 {{ group.daily_cost }}원</span>
+                </div>
+
+                <div class="route-card-list">
+                    {% for place in group.places %}
+                    <article class="route-card route-card-clean">
+                        <div class="route-card-media">
+                            {% if place.image %}
+                                <img src="{{ place.image.url }}" alt="{{ place.place_name }}">
+                            {% else %}
+                                <div class="route-card-noimg">No Image</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="route-card-body">
+                            <div class="route-card-topline">
+                                <span class="route-card-label">방문장소</span>
+                                <div class="route-card-facts">
+                                    {% if place.visit_time_str %}
+                                        <span>⏰ {{ place.visit_time_str }}</span>
+                                    {% endif %}
+                                    {% if place.cost > 0 %}
+                                        <span>💰 {{ place.cost }}원</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <h3 class="route-card-title">{{ place.place_name }}</h3>
+                            <p class="route-card-desc">{{ place.description|default:"아직 설명이 등록되지 않았어요."|linebreaksbr }}</p>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            </section>
+            {% empty %}
+            <div class="empty-detail-message">
+                등록된 루트가 없습니다.
+            </div>
+            {% endfor %}
+        </main>
+    </div>
+
+    <!-- PC / 태블릿 리뷰 -->
+    <section class="route-review-section desktop-review-section">
+        <div class="route-review-head">
+            <div>
+                <p class="eyebrow">ROUTE REVIEW</p>
+                <h2>루트 리뷰</h2>
+            </div>
+
+            <div class="route-review-score-card {% if not post.has_rating %}empty{% endif %}">
+                {% if post.has_rating %}
+                    <span
+                        class="pr-star-row pr-star-row-review"
+                        data-rating="{{ post.rating_avg_display }}"
+                        aria-label="별점 {{ post.rating_avg_display }}점"
+                    ></span>
+                    <strong>{{ post.rating_avg_display }}</strong>
+                    <span class="rating-count-text">({{ post.rating_count }})</span>
+                {% else %}
+                    <strong>0.0</strong>
+                    <span class="rating-count-text">리뷰 없음</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="route-review-form-card">
+            {% if user.is_authenticated %}
+                {% if post.author_id == user.id %}
+                    <div class="route-review-login-box">
+                        본인이 작성한 루트에는 리뷰를 남길 수 없습니다.
+                    </div>
+                {% else %}
+                    <form method="POST" action="{% url 'posts:review' post.pk %}" class="route-review-form">
+                        {% csrf_token %}
+
+                        <div class="review-star-input">
+                            <input type="radio" name="rating" id="rating5" value="5" required>
+                            <label for="rating5">★</label>
+
+                            <input type="radio" name="rating" id="rating4" value="4">
+                            <label for="rating4">★</label>
+
+                            <input type="radio" name="rating" id="rating3" value="3">
+                            <label for="rating3">★</label>
+
+                            <input type="radio" name="rating" id="rating2" value="2">
+                            <label for="rating2">★</label>
+
+                            <input type="radio" name="rating" id="rating1" value="1">
+                            <label for="rating1">★</label>
+                        </div>
+
+                        <textarea
+                            name="comment"
+                            class="route-review-textarea"
+                            placeholder="이 루트가 어땠는지 리뷰를 남겨주세요. 예: 동선이 편했어요, 가족 여행에 좋아요."
+                            maxlength="1000"
+                        ></textarea>
+
+                        <button type="submit" class="route-review-submit">
+                            별점 리뷰 등록하기
+                        </button>
+                    </form>
+                {% endif %}
+            {% else %}
+                <div class="route-review-login-box">
+                    리뷰를 남기려면 로그인이 필요합니다.
+                    <a href="{% url 'accounts:login' %}?next={{ request.get_full_path }}">로그인하기</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="route-review-list">
+            {% for review in post.active_reviews %}
+                <article class="route-review-card">
+                    <div class="route-review-card-top">
+                        <div class="route-review-author-box">
+                            <strong>{{ review.author_nickname }}</strong>
+                            <span class="route-review-date">{{ review.created_at|date:"Y.m.d H:i" }}</span>
+                        </div>
+
+                        <div class="route-review-card-score">
+                            <span
+                                class="pr-star-row pr-star-row-review-card"
+                                data-rating="{{ review.rating }}"
+                                aria-label="별점 {{ review.rating }}점"
+                            ></span>
+                            <b>{{ review.rating }}.0</b>
+                        </div>
+                    </div>
+
+                    {% if review.comment %}
+                        <p>{{ review.comment|linebreaksbr }}</p>
+                    {% else %}
+                        <p class="empty-comment">별점만 남긴 리뷰입니다.</p>
+                    {% endif %}
+                </article>
+            {% empty %}
+                <div class="route-review-empty">
+                    아직 리뷰가 없습니다. 첫 리뷰를 남겨보세요.
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+</section>
+
+<style>
+    .detail-message-list {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .detail-message {
+        padding: 12px 14px;
+        border-radius: 14px;
+        font-size: 13px;
+        font-weight: 850;
+    }
+
+    .detail-message.success {
+        background: #eefbf3;
+        color: #157347;
+        border: 1px solid #cdeed8;
+    }
+
+    .detail-message.error {
+        background: #fff3f4;
+        color: #d92d3c;
+        border: 1px solid #ffd0d5;
+    }
+
+    .detail-message.info {
+        background: #eef2ff;
+        color: #3157f6;
+        border: 1px solid #d9e1ff;
+    }
+
+    .detail-author-row {
+        margin: 12px 0 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        color: #667085;
+        font-size: 14px;
+        font-weight: 800;
+        flex-wrap: wrap;
+    }
+
+    .detail-author-avatar {
+        width: 26px;
+        height: 26px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #eef2ff;
+        font-size: 13px;
+    }
+
+    .detail-author-name {
+        color: #344054;
+        font-weight: 950;
+    }
+
+    .detail-author-dot {
+        color: #c0c6d4;
+        font-weight: 950;
+    }
+
+    .detail-like-count,
+    .detail-view-count {
+        color: #8a95a8;
+        font-weight: 850;
+    }
+
+    .detail-like-form {
+        margin: 14px 0 4px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .detail-like-btn {
+        min-height: 42px;
+        padding: 0 18px;
+        border: 0;
+        border-radius: 999px;
+        background: #3157f6;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 950;
+        cursor: pointer;
+        box-shadow: 0 12px 24px rgba(49, 87, 246, 0.22);
+    }
+
+    .detail-like-btn:hover {
+        background: #2447d8;
+    }
+
+    .detail-like-btn.is-liked {
+        background: #eef2ff;
+        color: #3157f6;
+        box-shadow: none;
+        border: 1px solid #cfd9ff;
+    }
+
+    .detail-rating-summary {
+        margin: 10px 0 2px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        color: #f59e0b;
+        font-size: 15px;
+        font-weight: 950;
+    }
+
+    .detail-rating-summary strong {
+        color: #111827;
+        font-size: 15px;
+    }
+
+    .rating-count-text {
+        color: #667085;
+        font-size: 13px;
+        font-weight: 850;
+    }
+
+    .detail-rating-summary.empty {
+        color: #98a2b3;
+    }
+
+    .pr-star-row {
+        display: inline-flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 1px !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+        flex: 0 0 auto !important;
+        margin: 0 !important;
+    }
+
+    .pr-star-icon {
+        --fill: 0%;
+        position: relative !important;
+        display: inline-block !important;
+        width: 1em !important;
+        height: 1em !important;
+        line-height: 1 !important;
+        flex: 0 0 1em !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        font-size: inherit !important;
+        font-weight: 900 !important;
+        color: #d9dee8 !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+    }
+
+    .pr-star-icon::before,
+    .pr-star-icon::after {
+        content: "★";
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1em;
+        height: 1em;
+        line-height: 1;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+    }
+
+    .pr-star-icon::before {
+        color: #d9dee8;
+    }
+
+    .pr-star-icon::after {
+        width: var(--fill);
+        overflow: hidden;
+        color: #f59e0b;
+    }
+
+    .pr-star-row-detail {
+        font-size: 19px;
+    }
+
+    .pr-star-row-review {
+        font-size: 18px;
+    }
+
+    .pr-star-row-review-card {
+        font-size: 15px;
+    }
+
+    .route-review-section {
+        margin-top: 34px;
+        padding: 30px;
+        border-radius: 26px;
+        background: #ffffff;
+        border: 1px solid #e5eaf3;
+        box-shadow: var(--shadow-card);
+    }
+
+    .route-review-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 18px;
+    }
+
+    .route-review-head h2 {
+        margin: 0;
+        color: #111827;
+        font-size: 26px;
+        font-weight: 950;
+        letter-spacing: -0.05em;
+    }
+
+    .route-review-score-card {
+        min-height: 46px;
+        padding: 0 15px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: #fff8e7;
+        border: 1px solid #f6d98a;
+        color: #f59e0b;
+        white-space: nowrap;
+    }
+
+    .route-review-score-card strong {
+        color: #111827;
+        font-size: 18px;
+        font-weight: 950;
+    }
+
+    .route-review-score-card.empty {
+        background: #f8faff;
+        border-color: #e5eaf3;
+        color: #667085;
+    }
+
+    .route-review-form-card {
+        padding: 18px;
+        border-radius: 20px;
+        background: #f8faff;
+        border: 1px solid #e5eaf3;
+        margin-bottom: 18px;
+    }
+
+    .route-review-form {
+        display: grid;
+        gap: 12px;
+    }
+
+    .review-star-input {
+        display: inline-flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        gap: 4px;
+        width: fit-content;
+    }
+
+    .review-star-input input {
+        display: none;
+    }
+
+    .review-star-input label {
+        color: #d9dee8;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 34px;
+        font-weight: 900;
+        line-height: 1;
+        cursor: pointer;
+        transition: color 0.12s ease, transform 0.12s ease;
+    }
+
+    .review-star-input label:hover,
+    .review-star-input label:hover ~ label,
+    .review-star-input input:checked ~ label {
+        color: #f59e0b;
+    }
+
+    .review-star-input label:hover {
+        transform: translateY(-1px);
+    }
+
+    .route-review-textarea {
+        width: 100%;
+        min-height: 112px;
+        padding: 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 16px;
+        background: #ffffff;
+        color: #111827;
+        font-size: 14px;
+        font-weight: 650;
+        line-height: 1.7;
+        resize: vertical;
+        box-sizing: border-box;
+        outline: none;
+    }
+
+    .route-review-textarea:focus {
+        border-color: #3157f6;
+        box-shadow: 0 0 0 4px rgba(49, 87, 246, 0.12);
+    }
+
+    .route-review-submit {
+        min-height: 48px;
+        border: 0;
+        border-radius: 16px;
+        background: #3157f6;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 950;
+        cursor: pointer;
+        box-shadow: 0 12px 24px rgba(49, 87, 246, 0.20);
+    }
+
+    .route-review-submit:hover {
+        background: #2447d8;
+    }
+
+    .route-review-login-box {
+        padding: 16px;
+        border-radius: 16px;
+        background: #ffffff;
+        border: 1px solid #e5eaf3;
+        color: #667085;
+        font-size: 14px;
+        font-weight: 850;
+        text-align: center;
+    }
+
+    .route-review-login-box a {
+        color: #3157f6;
+        font-weight: 950;
+        text-decoration: underline;
+    }
+
+    .route-review-list {
+        display: grid;
+        gap: 12px;
+    }
+
+    .route-review-card {
+        padding: 18px;
+        border-radius: 18px;
+        background: #ffffff;
+        border: 1px solid #e5eaf3;
+    }
+
+    .route-review-card-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+        margin-bottom: 10px;
+    }
+
+    .route-review-author-box strong {
+        display: block;
+        color: #111827;
+        font-size: 14px;
+        font-weight: 950;
+    }
+
+    .route-review-date {
+        display: block;
+        margin-top: 3px;
+        color: #98a2b3;
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    .route-review-card-score {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 6px !important;
+        white-space: nowrap !important;
+        flex: 0 0 auto !important;
+        min-width: 110px;
+    }
+
+    .route-review-card-score b {
+        color: #111827;
+        font-size: 13px;
+        font-weight: 950;
+        line-height: 1;
+    }
+
+    .route-review-card p {
+        margin: 0;
+        color: #344054;
+        font-size: 14px;
+        font-weight: 650;
+        line-height: 1.7;
+    }
+
+    .route-review-card p.empty-comment {
+        color: #98a2b3;
+    }
+
+    .route-review-empty {
+        padding: 34px 16px;
+        border-radius: 18px;
+        background: #f8faff;
+        border: 1px solid #e5eaf3;
+        color: #667085;
+        font-size: 14px;
+        font-weight: 850;
+        text-align: center;
+    }
+
+    .mobile-route-slider-shell {
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        .course-detail-shell {
+            padding: 22px 0 70px;
+            overflow-x: hidden;
+        }
+
+        .detail-top-actions {
+            padding: 0 14px;
+        }
+
+        .detail-hero {
+            padding: 0 16px;
+            margin-bottom: 18px;
+        }
+
+        .detail-title {
+            font-size: 32px;
+        }
+
+        .detail-stat-row {
+            display: none !important;
+        }
+
+        .desktop-detail-layout,
+        .desktop-review-section {
+            display: none !important;
+        }
+
+        .mobile-route-slider-shell {
+            display: block;
+            margin-top: 18px;
+            width: 100%;
+        }
+
+        .mobile-slide-hint {
+            width: calc(100% - 32px);
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #7f8a9c;
+            font-size: 12px;
+            font-weight: 850;
+        }
+
+        .mobile-slide-hint b {
+            color: #3157f6;
+            font-size: 11px;
+            letter-spacing: 0.06em;
+        }
+
+        .mobile-route-slider {
+            width: 100%;
+            display: flex;
+            gap: 14px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-snap-type: x mandatory;
+            scroll-padding-left: 16px;
+            padding: 0 16px 18px;
+            -webkit-overflow-scrolling: touch;
+            box-sizing: border-box;
+        }
+
+        .mobile-route-slider::-webkit-scrollbar {
+            display: none;
+        }
+
+        .mobile-route-slide {
+            flex: 0 0 100%;
+            scroll-snap-align: start;
+            min-width: 0;
+        }
+
+        .mobile-slide-card {
+            width: 100%;
+            min-height: 540px;
+            padding: 18px;
+            border-radius: 24px;
+            background: #ffffff;
+            border: 1px solid #e5eaf3;
+            box-shadow: 0 16px 36px rgba(17, 24, 39, 0.08);
+            box-sizing: border-box;
+        }
+
+        .mobile-map-slide-card {
+            min-height: 560px;
+        }
+
+        .mobile-detail-map {
+            height: 270px;
+            border-radius: 18px;
+        }
+
+        .mobile-flow-box {
+            margin-top: 16px;
+            padding-top: 15px;
+            border-top: 1px solid #eef1f6;
+        }
+
+        .mobile-route-sequence {
+            max-height: 320px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .mobile-day-slide-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .mobile-route-card-list {
+            gap: 14px;
+        }
+
+        .mobile-route-card {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            border-radius: 22px;
+        }
+
+        .mobile-route-card .route-card-media {
+            height: 220px;
+            min-height: 220px;
+            max-height: 220px;
+        }
+
+        .mobile-route-card .route-card-media img {
+            height: 100%;
+            min-height: 220px;
+        }
+
+        .mobile-route-card .route-card-noimg {
+            min-height: 220px;
+        }
+
+        .mobile-route-card .route-card-body {
+            min-height: auto;
+            padding: 21px;
+        }
+
+        .mobile-route-card .route-card-topline {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .mobile-route-card .route-card-facts {
+            justify-content: flex-start;
+        }
+
+        .mobile-route-card .route-card-title {
+            font-size: 21px;
+        }
+
+        .mobile-review-slide-card {
+            min-height: 620px;
+        }
+
+        .mobile-review-slide-card .route-review-head {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .mobile-review-slide-card .route-review-score-card {
+            justify-content: center;
+        }
+
+        .mobile-review-slide-card .route-review-card-top {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .mobile-review-slide-card .route-review-card-score {
+            justify-content: flex-start !important;
+            min-width: 0;
+        }
+
+        .mobile-review-slide-card .review-star-input {
+            justify-content: center;
+            width: 100%;
+        }
+
+        .mobile-slide-dots {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 2px;
+        }
+
+        .mobile-slide-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+            border: 0;
+            background: #cbd5e1;
+            padding: 0;
+        }
+
+        .mobile-slide-dot.is-active {
+            width: 20px;
+            background: #3157f6;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const starRows = document.querySelectorAll(".pr-star-row");
+
+    starRows.forEach(function (row) {
+        const rawRating = parseFloat(row.dataset.rating || "0");
+        const rating = Math.max(0, Math.min(5, Number.isNaN(rawRating) ? 0 : rawRating));
+
+        row.innerHTML = "";
+
+        for (let index = 1; index <= 5; index += 1) {
+            const starValue = Math.max(0, Math.min(1, rating - (index - 1)));
+            const fillPercent = Math.round(starValue * 100);
+
+            const star = document.createElement("span");
+            star.className = "pr-star-icon";
+            star.style.setProperty("--fill", `${fillPercent}%`);
+
+            row.appendChild(star);
+        }
+    });
+
+    const slider = document.getElementById("mobileRouteSlider");
+    const dotsBox = document.getElementById("mobileSlideDots");
+
+    if (slider && dotsBox) {
+        const slides = Array.from(slider.querySelectorAll(".mobile-route-slide"));
+
+        dotsBox.innerHTML = "";
+
+        slides.forEach(function (_, index) {
+            const dot = document.createElement("button");
+            dot.type = "button";
+            dot.className = "mobile-slide-dot";
+            if (index === 0) {
+                dot.classList.add("is-active");
+            }
+
+            dot.addEventListener("click", function () {
+                const target = slides[index];
+                if (target) {
+                    slider.scrollTo({
+                        left: target.offsetLeft - slider.offsetLeft,
+                        behavior: "smooth"
+                    });
+                }
+            });
+
+            dotsBox.appendChild(dot);
+        });
+
+        const dots = Array.from(dotsBox.querySelectorAll(".mobile-slide-dot"));
+
+        function updateDots() {
+            const slideWidth = slides[0] ? slides[0].offsetWidth + 14 : 1;
+            const activeIndex = Math.round(slider.scrollLeft / slideWidth);
+
+            dots.forEach(function (dot, index) {
+                dot.classList.toggle("is-active", index === activeIndex);
+            });
+        }
+
+        slider.addEventListener("scroll", function () {
+            window.requestAnimationFrame(updateDots);
+        });
+    }
+
+    let mapData = [];
+
+    {% if post.start_latitude and post.start_longitude %}
+        mapData.push({
+            title: "{% if post.start_place_name %}{{ post.start_place_name|escapejs }}{% elif post.start_region or post.start_district %}{{ post.start_region|escapejs }} {{ post.start_district|escapejs }}{% else %}출발지{% endif %} 출발",
+            lat: {{ post.start_latitude }},
+            lng: {{ post.start_longitude }},
+            markerLabel: "S",
+            markerType: "start"
+        });
+    {% endif %}
+
+    {% for place in ordered_places %}
+        {% if place.latitude and place.longitude %}
+            mapData.push({
+                title: "{{ place.place_name|escapejs }}",
+                lat: {{ place.latitude }},
+                lng: {{ place.longitude }},
+                markerLabel: "{{ forloop.counter }}",
+                markerType: "place"
+            });
+        {% endif %}
+    {% endfor %}
+
+    function renderCourseMap(mapBox) {
+        if (!mapBox) {
+            return;
+        }
+
+        if (typeof kakao === 'undefined' || !kakao.maps) {
+            mapBox.innerHTML = '<div class="map-empty-state">카카오맵을 불러오지 못했습니다.</div>';
+            return;
+        }
+
+        if (mapData.length === 0) {
+            mapBox.innerHTML = '<div class="map-empty-state">등록된 좌표가 없습니다.</div>';
+            return;
+        }
+
+        try {
+            mapBox.innerHTML = '';
+
+            const map = new kakao.maps.Map(mapBox, {
+                center: new kakao.maps.LatLng(mapData[0].lat, mapData[0].lng),
+                level: 7
+            });
+
+            const bounds = new kakao.maps.LatLngBounds();
+            const linePath = [];
+
+            mapData.forEach(function (item) {
+                const position = new kakao.maps.LatLng(item.lat, item.lng);
+
+                const marker = new kakao.maps.Marker({
+                    position: position,
+                    title: item.title
+                });
+
+                marker.setMap(map);
+
+                const labelPrefix = item.markerLabel || '';
+                const label = `
+                    <div style="padding:6px 10px;font-size:12px;font-weight:800;text-align:center;white-space:nowrap;">
+                        ${labelPrefix}. ${item.title}
+                    </div>
+                `;
+
+                const infowindow = new kakao.maps.InfoWindow({
+                    content: label
+                });
+
+                infowindow.open(map, marker);
+
+                bounds.extend(position);
+                linePath.push(position);
+            });
+
+            if (linePath.length > 1) {
+                const polyline = new kakao.maps.Polyline({
+                    path: linePath,
+                    strokeWeight: 4,
+                    strokeColor: '#3157f6',
+                    strokeOpacity: 0.85,
+                    strokeStyle: 'solid'
+                });
+
+                polyline.setMap(map);
+            }
+
+            map.setBounds(bounds);
+
+            setTimeout(function () {
+                map.relayout();
+                map.setBounds(bounds);
+            }, 250);
+
+        } catch (e) {
+            mapBox.innerHTML = '<div class="map-empty-state">지도 표시 중 오류가 발생했습니다.</div>';
+            console.log(e);
+        }
+    }
+
+    renderCourseMap(document.getElementById('course-map'));
+    renderCourseMap(document.getElementById('mobile-course-map'));
+});
+</script>
+{% endblock %}

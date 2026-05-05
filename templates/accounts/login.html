@@ -1,0 +1,437 @@
+{% extends 'base.html' %}
+{% load socialaccount %}
+
+{% block content %}
+<section class="auth-page">
+    <div class="auth-card">
+        <div class="auth-brand">
+            <a href="{% url 'posts:list' %}" class="auth-logo">포인루트</a>
+            <p class="auth-eyebrow">LOGIN</p>
+            <h1>다시 여행 루트를 이어가세요</h1>
+            <p>
+                카카오, 구글 계정으로 빠르게 로그인하거나,
+                가입할 때 만든 6자리 핀번호로 로그인할 수 있어요.
+            </p>
+        </div>
+
+        {% if messages %}
+        <div class="auth-message-box">
+            {% for message in messages %}
+                <p class="{{ message.tags }}">{{ message }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if form.errors %}
+        <div class="auth-error-box">
+            <strong>입력 정보를 확인해주세요.</strong>
+
+            {% for field in form %}
+                {% if field.errors %}
+                    <p>{{ field.label }}: {{ field.errors|striptags }}</p>
+                {% endif %}
+            {% endfor %}
+
+            {% if form.non_field_errors %}
+                <p>{{ form.non_field_errors|striptags }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="social-login-list">
+            {% if social_ready.kakao %}
+                {% if request.GET.next %}
+                    <a href="{% provider_login_url 'kakao' process='login' next=request.GET.next %}" class="social-login-btn kakao">
+                        <span class="social-icon">K</span>
+                        <strong>카카오로 계속하기</strong>
+                    </a>
+                {% else %}
+                    <a href="{% provider_login_url 'kakao' process='login' %}" class="social-login-btn kakao">
+                        <span class="social-icon">K</span>
+                        <strong>카카오로 계속하기</strong>
+                    </a>
+                {% endif %}
+            {% else %}
+                <a href="#" class="social-login-btn kakao disabled-social"
+                   onclick="alert('카카오 로그인은 관리자 설정 후 사용할 수 있습니다.'); return false;">
+                    <span class="social-icon">K</span>
+                    <strong>카카오로 계속하기</strong>
+                </a>
+            {% endif %}
+
+            <a href="/accounts/google/login/?process=login{% if request.GET.next %}&next={{ request.GET.next|urlencode }}{% endif %}" class="social-login-btn google">
+                <span class="social-icon">G</span>
+                <strong>Google로 계속하기</strong>
+            </a>
+
+            {% if social_ready.naver %}
+                {% if request.GET.next %}
+                    <a href="{% provider_login_url 'naver' process='login' next=request.GET.next %}" class="social-login-btn naver">
+                        <span class="social-icon">N</span>
+                        <strong>네이버로 계속하기</strong>
+                    </a>
+                {% else %}
+                    <a href="{% provider_login_url 'naver' process='login' %}" class="social-login-btn naver">
+                        <span class="social-icon">N</span>
+                        <strong>네이버로 계속하기</strong>
+                    </a>
+                {% endif %}
+            {% else %}
+                <a href="#" class="social-login-btn naver disabled-social"
+                   onclick="alert('네이버 로그인은 아직 준비중입니다.'); return false;">
+                    <span class="social-icon">N</span>
+                    <strong>네이버로 계속하기</strong>
+                </a>
+            {% endif %}
+        </div>
+
+        <div class="auth-divider">
+            <span>또는 6자리 핀번호 로그인</span>
+        </div>
+
+        <form method="POST" action="{% url 'accounts:login' %}" class="auth-form">
+            {% csrf_token %}
+
+            {% if request.GET.next %}
+                <input type="hidden" name="next" value="{{ request.GET.next }}">
+            {% endif %}
+
+            <div class="auth-field">
+                <label for="login_id">아이디 또는 보호 이메일</label>
+                <input
+                    type="text"
+                    id="login_id"
+                    name="login_id"
+                    placeholder="아이디 또는 보호 이메일 입력"
+                    value="{{ request.POST.login_id|default:'' }}"
+                    required
+                    autocomplete="username"
+                >
+            </div>
+
+            <div class="auth-field">
+                <div class="auth-label-row">
+                    <label for="pin">6자리 핀번호</label>
+                    <a href="{% url 'account_reset_password' %}" class="auth-small-link">핀번호를 잊었나요?</a>
+                </div>
+
+                <input
+                    type="password"
+                    id="pin"
+                    name="pin"
+                    inputmode="numeric"
+                    pattern="[0-9]{6}"
+                    maxlength="6"
+                    minlength="6"
+                    placeholder="숫자 6자리"
+                    required
+                    autocomplete="current-password"
+                >
+                <small>가입할 때 설정한 숫자 6자리를 입력해주세요.</small>
+            </div>
+
+            <button type="submit" class="auth-submit-btn">
+                로그인
+            </button>
+        </form>
+
+        <div class="auth-bottom">
+            <span>아직 계정이 없나요?</span>
+            <a href="{% url 'accounts:signup' %}">회원가입하기</a>
+        </div>
+    </div>
+</section>
+
+<style>
+.auth-page {
+    min-height: calc(100vh - 76px);
+    padding: 58px 18px 80px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    background:
+        radial-gradient(circle at top left, rgba(49, 87, 246, 0.08), transparent 34%),
+        #f4f6fb;
+}
+
+.auth-card {
+    width: min(100%, 460px);
+    padding: 36px 32px 30px;
+    border-radius: 28px;
+    background: #ffffff;
+    border: 1px solid #dfe5f0;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.10);
+}
+
+.auth-brand {
+    text-align: center;
+    margin-bottom: 26px;
+}
+
+.auth-logo {
+    display: inline-block;
+    margin-bottom: 18px;
+    color: #3157f6;
+    font-size: 28px;
+    font-weight: 950;
+    letter-spacing: -0.06em;
+    text-decoration: none;
+}
+
+.auth-eyebrow {
+    margin: 0 0 8px;
+    color: #3157f6;
+    font-size: 11px;
+    font-weight: 950;
+    letter-spacing: 0.16em;
+}
+
+.auth-brand h1 {
+    margin: 0;
+    color: #111827;
+    font-size: 30px;
+    line-height: 1.18;
+    font-weight: 950;
+    letter-spacing: -0.06em;
+}
+
+.auth-brand p:last-child {
+    margin: 12px 0 0;
+    color: #667085;
+    font-size: 14px;
+    line-height: 1.65;
+    font-weight: 650;
+}
+
+.auth-message-box,
+.auth-error-box {
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.auth-message-box {
+    background: #eef2ff;
+    border: 1px solid #d9e1ff;
+    color: #3157f6;
+}
+
+.auth-error-box {
+    background: #fff3f4;
+    border: 1px solid #ffd0d5;
+    color: #e0313d;
+}
+
+.auth-message-box p,
+.auth-error-box p {
+    margin: 4px 0;
+}
+
+.social-login-list {
+    display: grid;
+    gap: 10px;
+}
+
+.social-login-btn {
+    height: 52px;
+    padding: 0 16px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: 1px solid #dfe5f0;
+    background: #ffffff;
+    color: #111827;
+    font-size: 15px;
+    font-weight: 850;
+    text-decoration: none;
+    transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+}
+
+.social-login-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+}
+
+.disabled-social {
+    opacity: 0.72;
+}
+
+.social-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 950;
+}
+
+.social-login-btn.google {
+    background: #ffffff;
+    color: #111827;
+}
+
+.social-login-btn.google .social-icon {
+    background: #f5f5f5;
+    color: #111827;
+}
+
+.social-login-btn.naver {
+    background: #03c75a;
+    color: #ffffff;
+    border-color: #03c75a;
+}
+
+.social-login-btn.naver .social-icon {
+    background: #ffffff;
+    color: #03c75a;
+}
+
+.social-login-btn.kakao {
+    background: #fee500;
+    color: #111827;
+    border-color: #fee500;
+}
+
+.social-login-btn.kakao .social-icon {
+    background: #111827;
+    color: #fee500;
+}
+
+.auth-divider {
+    position: relative;
+    margin: 24px 0;
+    text-align: center;
+}
+
+.auth-divider::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    background: #e6ebf3;
+}
+
+.auth-divider span {
+    position: relative;
+    z-index: 1;
+    padding: 0 12px;
+    background: #ffffff;
+    color: #98a2b3;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.auth-form {
+    display: grid;
+    gap: 16px;
+}
+
+.auth-field {
+    display: grid;
+    gap: 8px;
+}
+
+.auth-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.auth-small-link {
+    color: #3157f6;
+    font-size: 12px;
+    font-weight: 900;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.auth-small-link:hover {
+    text-decoration: underline;
+}
+
+.auth-field label {
+    color: #111827;
+    font-size: 13px;
+    font-weight: 850;
+}
+
+.auth-field input {
+    width: 100%;
+    height: 54px;
+    padding: 0 16px;
+    border-radius: 14px;
+    border: 1px solid #c7d0df;
+    background: #ffffff;
+    color: #111827;
+    font-size: 15px;
+    font-weight: 750;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.auth-field input:focus {
+    border-color: #3157f6;
+    box-shadow: 0 0 0 4px rgba(49, 87, 246, 0.12);
+}
+
+.auth-field small {
+    color: #8a95a8;
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.auth-submit-btn {
+    height: 56px;
+    border: 0;
+    border-radius: 15px;
+    background: #3157f6;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 950;
+    cursor: pointer;
+    box-shadow: 0 15px 28px rgba(49, 87, 246, 0.22);
+}
+
+.auth-submit-btn:hover {
+    background: #2447d8;
+}
+
+.auth-bottom {
+    margin-top: 22px;
+    padding-top: 20px;
+    border-top: 1px solid #eef1f6;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    color: #667085;
+    font-size: 14px;
+    font-weight: 750;
+}
+
+.auth-bottom a {
+    color: #3157f6;
+    font-weight: 900;
+    text-decoration: none;
+}
+
+@media (max-width: 560px) {
+    .auth-card {
+        padding: 30px 20px 24px;
+        border-radius: 22px;
+    }
+
+    .auth-brand h1 {
+        font-size: 26px;
+    }
+}
+</style>
+{% endblock %}

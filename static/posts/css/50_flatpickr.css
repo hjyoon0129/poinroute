@@ -1,0 +1,290 @@
+/* =========================================================
+   Poinroute premium flatpickr calendar
+   - 무조건 input 아래 표시
+   - 바깥 « » = 연도 이동
+   - 안쪽 ‹ › = 월 이동
+   - 가운데 "2026년 5월" 텍스트 표시
+   - 년/월 드롭다운 제거
+   - 삐뚤어짐 방지용 레이아웃 고정
+   ========================================================= */
+
+.flatpickr-calendar,
+.flatpickr-calendar.poinroute-calendar {
+    width: 344px !important;
+    min-width: 344px !important;
+    max-width: 344px !important;
+    padding: 16px !important;
+    border: 1px solid rgba(214, 222, 238, 0.95) !important;
+    border-radius: 24px !important;
+    background: rgba(255, 255, 255, 0.99) !important;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.18) !important;
+    overflow: hidden !important;
+    font-family: 'Pretendard', sans-serif !important;
+    z-index: 99999 !important;
+    backdrop-filter: blur(14px);
+    box-sizing: border-box !important;
+}
+
+.flatpickr-calendar.arrowTop::before,
+.flatpickr-calendar.arrowTop::after,
+.flatpickr-calendar.arrowBottom::before,
+.flatpickr-calendar.arrowBottom::after,
+.flatpickr-calendar.poinroute-calendar::before,
+.flatpickr-calendar.poinroute-calendar::after {
+    display: none !important;
+}
+
+.flatpickr-calendar.open,
+.flatpickr-calendar.poinroute-calendar.open {
+    animation: poinrouteCalendarUp 0.18s ease-out;
+}
+
+@keyframes poinrouteCalendarUp {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.985);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* 기본 flatpickr 월 헤더 숨김 */
+.poinroute-calendar .flatpickr-months {
+    display: none !important;
+}
+
+/* 커스텀 헤더 */
+.poinroute-calendar-header {
+    width: 100%;
+    height: 48px;
+    display: grid;
+    grid-template-columns: 34px 34px minmax(0, 1fr) 34px 34px;
+    gap: 7px;
+    align-items: center;
+    margin-bottom: 12px;
+    box-sizing: border-box;
+}
+
+.poinroute-cal-nav {
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 12px;
+    background: #f4f6fb;
+    color: #667085;
+    font-size: 21px;
+    font-weight: 950;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition:
+        background 0.15s ease,
+        color 0.15s ease,
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.poinroute-cal-nav:hover {
+    background: #eef2ff;
+    color: #3157f6;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(49, 87, 246, 0.12);
+}
+
+.poinroute-cal-nav.year-prev,
+.poinroute-cal-nav.year-next {
+    background: #fff8e7;
+    color: #9a6b00;
+}
+
+.poinroute-cal-nav.year-prev:hover,
+.poinroute-cal-nav.year-next:hover {
+    background: #fff1c7;
+    color: #7a5200;
+    box-shadow: 0 8px 18px rgba(154, 107, 0, 0.12);
+}
+
+.poinroute-cal-title {
+    min-width: 0;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 13px;
+    background: linear-gradient(180deg, #ffffff, #fbfcff);
+    border: 1px solid #d7deeb;
+    color: #111827;
+    font-size: 15px;
+    font-weight: 950;
+    letter-spacing: -0.04em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+/* 내부 레이아웃 고정 */
+.poinroute-calendar .flatpickr-innerContainer {
+    display: block !important;
+    width: 100% !important;
+    overflow: visible !important;
+}
+
+.poinroute-calendar .flatpickr-rContainer {
+    width: 100% !important;
+    display: block !important;
+}
+
+.poinroute-calendar .flatpickr-weekdays {
+    width: 100% !important;
+    height: 36px !important;
+    margin: 0 !important;
+    border-top: 1px solid #edf1f7 !important;
+    border-bottom: 1px solid #edf1f7 !important;
+    background: #ffffff !important;
+}
+
+.poinroute-calendar .flatpickr-weekdaycontainer {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+}
+
+.poinroute-calendar span.flatpickr-weekday {
+    width: 100% !important;
+    height: 36px !important;
+    line-height: 36px !important;
+    color: #8a95a8 !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    text-align: center !important;
+}
+
+.poinroute-calendar .flatpickr-days {
+    width: 100% !important;
+    padding: 10px 0 0 !important;
+    overflow: hidden !important;
+}
+
+.poinroute-calendar .dayContainer {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    gap: 5px 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.poinroute-calendar .flatpickr-day {
+    width: 34px !important;
+    max-width: 34px !important;
+    height: 34px !important;
+    line-height: 34px !important;
+    margin: 0 auto !important;
+    border: 0 !important;
+    border-radius: 12px !important;
+    color: #344054 !important;
+    font-size: 13px !important;
+    font-weight: 850 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition:
+        background 0.14s ease,
+        color 0.14s ease,
+        transform 0.14s ease,
+        box-shadow 0.14s ease;
+}
+
+.poinroute-calendar .flatpickr-day:hover {
+    background: #eef2ff !important;
+    color: #3157f6 !important;
+    transform: translateY(-1px);
+}
+
+.poinroute-calendar .flatpickr-day.today {
+    background: #fff6d8 !important;
+    color: #7a5200 !important;
+    border: 0 !important;
+    font-weight: 950 !important;
+}
+
+.poinroute-calendar .flatpickr-day.selected,
+.poinroute-calendar .flatpickr-day.startRange,
+.poinroute-calendar .flatpickr-day.endRange {
+    background: #3157f6 !important;
+    color: #ffffff !important;
+    box-shadow: 0 8px 18px rgba(49, 87, 246, 0.26) !important;
+}
+
+.poinroute-calendar .flatpickr-day.inRange {
+    background: #eef2ff !important;
+    color: #3157f6 !important;
+    box-shadow: none !important;
+}
+
+.poinroute-calendar .flatpickr-day.prevMonthDay,
+.poinroute-calendar .flatpickr-day.nextMonthDay {
+    color: #c2cad8 !important;
+}
+
+.poinroute-calendar .flatpickr-day.flatpickr-disabled,
+.poinroute-calendar .flatpickr-day.flatpickr-disabled:hover {
+    color: #d4dae5 !important;
+    background: transparent !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+}
+
+/* 혹시 기본 요소가 남아도 화면 밀지 않게 보정 */
+.poinroute-calendar .flatpickr-current-month,
+.poinroute-calendar .flatpickr-prev-month,
+.poinroute-calendar .flatpickr-next-month {
+    display: none !important;
+}
+
+/* 모바일 */
+@media (max-width: 520px) {
+    .flatpickr-calendar,
+    .flatpickr-calendar.poinroute-calendar {
+        width: calc(100vw - 34px) !important;
+        min-width: calc(100vw - 34px) !important;
+        max-width: calc(100vw - 34px) !important;
+        padding: 14px !important;
+        border-radius: 22px !important;
+    }
+
+    .poinroute-calendar-header {
+        grid-template-columns: 32px 32px minmax(0, 1fr) 32px 32px;
+        gap: 5px;
+    }
+
+    .poinroute-cal-nav {
+        width: 32px;
+        height: 32px;
+        border-radius: 11px;
+        font-size: 19px;
+    }
+
+    .poinroute-cal-title {
+        height: 34px;
+        padding: 0 8px;
+        border-radius: 11px;
+        font-size: 13px;
+    }
+
+    .poinroute-calendar .flatpickr-day {
+        width: 31px !important;
+        max-width: 31px !important;
+        height: 31px !important;
+        line-height: 31px !important;
+        border-radius: 11px !important;
+        font-size: 12px !important;
+    }
+}

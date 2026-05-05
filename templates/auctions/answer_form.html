@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'auctions/auctions.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="auction-page">
+    <div class="auction-form-card">
+        <div class="auction-form-head">
+            <div>
+                <p class="auction-eyebrow">ANSWER</p>
+                <h1>{{ title }}</h1>
+                <p>
+                    채택되면 <strong>{{ auction.reward_points }}P</strong>를 받을 수 있습니다.
+                    실제로 도움이 되는 코스를 자세히 작성해주세요.
+                </p>
+            </div>
+
+            <a href="{% url 'auctions:detail' auction.pk %}" class="auction-back-btn">의뢰 보기</a>
+        </div>
+
+        <div class="auction-target-box">
+            <span>의뢰</span>
+            <strong>{{ auction.title }}</strong>
+        </div>
+
+        {% if form.errors %}
+            <div class="auction-form-errors">
+                입력 내용을 다시 확인해주세요.
+            </div>
+        {% endif %}
+
+        <form method="post" class="auction-form">
+            {% csrf_token %}
+
+            {% for field in form %}
+                <div class="auction-form-row">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+
+                    {% if field.help_text %}
+                        <p class="auction-help">{{ field.help_text }}</p>
+                    {% endif %}
+
+                    {% if field.errors %}
+                        <p class="auction-field-error">{{ field.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <div class="auction-form-actions">
+                <button type="submit" class="auction-primary-btn">{{ submit_label }}</button>
+                <a href="{% url 'auctions:detail' auction.pk %}" class="auction-cancel-btn">취소</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

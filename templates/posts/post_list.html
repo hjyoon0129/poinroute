@@ -1,0 +1,626 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="hero-section poinroute-hero-section">
+    <div class="hero-content">
+        <p class="eyebrow light">POINROUTE</p>
+
+        <h1 class="poinroute-hero-title">
+            <span class="poinroute-title-line">우리 동네에서 떠나는</span>
+            <span class="poinroute-title-line">여행 루트</span>
+        </h1>
+
+        <p class="poinroute-hero-desc">
+            <span class="poinroute-desc-line">출발지, 여행 테마, 인기순, 목적지,</span>
+            <span class="poinroute-desc-line">닉네임으로 루트를 찾아보세요.</span>
+        </p>
+    </div>
+
+    <form method="GET" class="poinroute-search-panel optimized-search">
+        <div class="search-group poinroute-box origin-box">
+            <div class="search-group-title">
+                <span>출발지</span>
+                <small>시/도 → 군/구</small>
+            </div>
+
+            <div class="origin-select-row poinroute-origin-row">
+                <select name="start_region" id="search_region" class="custom-select hero-select">
+                    <option value="">시/도</option>
+                </select>
+
+                <select name="start_district" id="search_district" class="custom-select hero-select">
+                    <option value="">군/구</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="search-group poinroute-box theme-box">
+            <div class="search-group-title">
+                <span>여행 테마</span>
+                <small>스타일</small>
+            </div>
+
+            <select name="theme" id="search_theme" class="custom-select hero-select">
+                <option value="">전체 테마</option>
+                {% for value, label in theme_choices %}
+                    <option value="{{ value }}"{% if selected_theme == value %} selected{% endif %}>
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="search-group poinroute-box sort-box">
+            <div class="search-group-title">
+                <span>인기 필터</span>
+                <small>정렬 기준</small>
+            </div>
+
+            <select name="sort" class="custom-select hero-select sort-select">
+                <option value="latest"{% if selected_sort == 'latest' %} selected{% endif %}>최신순</option>
+                <option value="popular"{% if selected_sort == 'popular' %} selected{% endif %}>인기순</option>
+                <option value="likes"{% if selected_sort == 'likes' %} selected{% endif %}>추천순</option>
+                <option value="views"{% if selected_sort == 'views' %} selected{% endif %}>조회순</option>
+            </select>
+        </div>
+
+        <div class="search-group poinroute-box keyword-box">
+            <div class="search-group-title">
+                <span>통합 검색</span>
+                <small>목적지, 루트명, 장소, 닉네임</small>
+            </div>
+
+            <div class="keyword-search-row">
+                <input
+                    type="text"
+                    name="dest_loc"
+                    value="{{ search_keyword }}"
+                    placeholder="예: 강릉, 청라여행자"
+                >
+                <button type="submit">검색하기</button>
+            </div>
+        </div>
+    </form>
+</section>
+
+<section class="list-header">
+    <div class="list-header-copy">
+        <p class="eyebrow">REAL ROUTE</p>
+        <h2>실시간 추천 루트</h2>
+    </div>
+
+    <form action="{% url 'posts:create' %}" method="get" class="create-course-form">
+        <button type="submit" class="dark-create-btn">
+            + 새 루트 등록
+        </button>
+    </form>
+</section>
+
+<section class="post-grid">
+    {% for post in posts %}
+    <a href="{% url 'posts:detail' post.pk %}" class="post-card">
+        <div class="post-thumb">
+            {% if post.thumbnail %}
+                <img src="{{ post.thumbnail.url }}" alt="{{ post.title }}">
+            {% elif post.places.first.image %}
+                <img src="{{ post.places.first.image.url }}" alt="{{ post.title }}">
+            {% else %}
+                <div class="no-image">No Image</div>
+            {% endif %}
+
+            <div class="post-popular-badges">
+                {% if post.has_rating %}
+                    <span>★ {{ post.rating_avg_display }}</span>
+                {% endif %}
+                <span>👍 {{ post.likes_total|default:0 }}</span>
+                <span>👀 {{ post.views }}</span>
+            </div>
+        </div>
+
+        <div class="post-card-body">
+            <div class="chip-row">
+                <span class="chip blue">
+                    {{ post.start_region }} {{ post.start_district }}
+                </span>
+                <span class="chip gray">{{ post.get_theme_display }}</span>
+            </div>
+
+            <h3>{{ post.title }}</h3>
+
+            <div class="post-rating-row {% if not post.has_rating %}empty{% endif %}">
+                {% if post.has_rating %}
+                    <span
+                        class="pr-star-row pr-star-row-card"
+                        data-rating="{{ post.rating_avg_display }}"
+                        aria-label="별점 {{ post.rating_avg_display }}점"
+                    ></span>
+                    <strong>{{ post.rating_avg_display }}</strong>
+                    <span>({{ post.rating_count }})</span>
+                {% else %}
+                    <span
+                        class="pr-star-row pr-star-row-card is-empty"
+                        data-rating="0"
+                        aria-label="리뷰 없음"
+                    ></span>
+                    <span>리뷰 없음</span>
+                {% endif %}
+            </div>
+
+            <div class="post-author-row">
+                <span class="post-author-avatar">👤</span>
+                <span class="post-author-name">{{ post.author_nickname }}</span>
+                <span class="post-dot">·</span>
+                <span class="post-like-text">추천 {{ post.likes_total|default:0 }}</span>
+                <span class="post-dot">·</span>
+                <span class="post-view-text">조회 {{ post.views }}</span>
+            </div>
+
+            <div class="post-card-footer">
+                <span>⏱️ {{ post.total_time }}</span>
+                <span>💰 {{ post.total_cost }}원</span>
+            </div>
+        </div>
+    </a>
+    {% empty %}
+    <div class="empty-posts">
+        <strong>아직 등록된 여행 루트가 없습니다.</strong>
+        <p>첫 번째 루트를 등록해보세요.</p>
+    </div>
+    {% endfor %}
+</section>
+
+<style>
+    .poinroute-hero-section {
+        width: min(1280px, calc(100% - 36px));
+        margin-left: auto;
+        margin-right: auto;
+        padding-bottom: 50px;
+    }
+
+    .poinroute-hero-title {
+        margin: 0;
+    }
+
+    .poinroute-title-line {
+        display: inline;
+    }
+
+    .poinroute-hero-desc {
+        margin: 14px 0 0;
+    }
+
+    .poinroute-desc-line {
+        display: inline;
+    }
+
+    .poinroute-search-panel.optimized-search {
+        width: min(100%, 1190px);
+        margin: 28px auto 0;
+        padding: 14px;
+        border-radius: 28px;
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(226, 232, 240, 0.95);
+        box-shadow: 0 24px 64px rgba(15, 23, 42, 0.16);
+        backdrop-filter: blur(10px);
+        display: grid;
+        grid-template-columns:
+            minmax(260px, 0.72fr)
+            minmax(190px, 0.50fr)
+            minmax(145px, 0.36fr)
+            minmax(365px, 0.95fr);
+        gap: 10px;
+        align-items: stretch;
+    }
+
+    .poinroute-box {
+        min-width: 0;
+        padding: 13px;
+        border-radius: 19px;
+    }
+
+    .origin-box {
+        background: rgba(239, 245, 255, 0.92);
+        border: 1px solid rgba(188, 210, 255, 0.95);
+    }
+
+    .theme-box {
+        background: rgba(248, 244, 255, 0.94);
+        border: 1px solid rgba(211, 196, 255, 0.95);
+    }
+
+    .sort-box {
+        background: rgba(248, 250, 255, 0.96);
+        border: 1px solid rgba(207, 217, 255, 0.95);
+    }
+
+    .keyword-box {
+        background: rgba(255, 249, 235, 0.94);
+        border: 1px solid rgba(255, 213, 120, 0.95);
+    }
+
+    .poinroute-box .search-group-title {
+        margin-bottom: 9px;
+    }
+
+    .poinroute-box .search-group-title span {
+        font-size: 13px;
+        font-weight: 950;
+    }
+
+    .poinroute-box .search-group-title small {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+    }
+
+    .poinroute-origin-row {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .keyword-search-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 108px;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .poinroute-search-panel select,
+    .poinroute-search-panel input {
+        width: 100% !important;
+        height: 48px;
+        min-width: 0 !important;
+        padding: 0 13px;
+        border-radius: 14px;
+        border: 1px solid #c7d0df;
+        background-color: #ffffff;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 800;
+        outline: none;
+        box-sizing: border-box;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .poinroute-search-panel select {
+        cursor: pointer;
+    }
+
+    .poinroute-search-panel input::placeholder {
+        color: #8a95a8;
+    }
+
+    .poinroute-search-panel select:focus,
+    .poinroute-search-panel input:focus {
+        border-color: #3157f6;
+        box-shadow: 0 0 0 4px rgba(49, 87, 246, 0.12);
+    }
+
+    .keyword-search-row button {
+        height: 48px;
+        border: 0;
+        border-radius: 14px;
+        background: #3157f6;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 950;
+        cursor: pointer;
+        white-space: nowrap;
+        box-shadow: 0 12px 24px rgba(49, 87, 246, 0.20);
+    }
+
+    .keyword-search-row button:hover {
+        background: #2447d8;
+    }
+
+    .post-thumb {
+        position: relative;
+    }
+
+    .post-popular-badges {
+        position: absolute;
+        right: 12px;
+        bottom: 12px;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        z-index: 2;
+    }
+
+    .post-popular-badges span {
+        padding: 7px 10px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.76);
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 900;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+    }
+
+    .post-rating-row {
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #f59e0b;
+        font-size: 13px;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    .post-rating-row strong {
+        color: #111827;
+        font-size: 13px;
+        font-weight: 950;
+    }
+
+    .post-rating-row span:last-child {
+        color: #667085;
+        font-size: 12px;
+        font-weight: 850;
+    }
+
+    .post-rating-row.empty {
+        color: #98a2b3;
+    }
+
+    .pr-star-row {
+        display: inline-flex;
+        align-items: center;
+        gap: 1px;
+        line-height: 1;
+        white-space: nowrap;
+        flex: 0 0 auto;
+    }
+
+    .pr-star-icon {
+        --fill: 0%;
+        position: relative;
+        display: inline-block;
+        width: 1em;
+        height: 1em;
+        line-height: 1;
+        flex: 0 0 auto;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: inherit;
+        font-weight: 900;
+        color: #d9dee8;
+        overflow: hidden;
+    }
+
+    .pr-star-icon::before,
+    .pr-star-icon::after {
+        content: "★";
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1em;
+        height: 1em;
+        line-height: 1;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+    }
+
+    .pr-star-icon::before {
+        color: #d9dee8;
+    }
+
+    .pr-star-icon::after {
+        width: var(--fill);
+        overflow: hidden;
+        color: #f59e0b;
+    }
+
+    .pr-star-row-card {
+        font-size: 15px;
+    }
+
+    .post-author-row {
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #667085;
+        font-size: 13px;
+        font-weight: 750;
+        line-height: 1.3;
+        flex-wrap: wrap;
+    }
+
+    .post-author-avatar {
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #eef2ff;
+        font-size: 12px;
+        flex: 0 0 auto;
+    }
+
+    .post-author-name {
+        max-width: 120px;
+        color: #344054;
+        font-weight: 900;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .post-dot {
+        color: #c0c6d4;
+        font-weight: 900;
+    }
+
+    .post-like-text,
+    .post-view-text {
+        color: #8a95a8;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    @media (max-width: 1220px) {
+        .poinroute-search-panel.optimized-search {
+            width: min(100%, 1040px);
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .theme-box,
+        .sort-box {
+            padding: 11px 13px;
+        }
+    }
+
+    @media (max-width: 760px) {
+        .poinroute-hero-section {
+            width: min(100%, calc(100% - 22px));
+            padding-bottom: 36px;
+        }
+
+        .poinroute-hero-section .hero-content {
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+            padding-left: 0;
+            padding-right: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center !important;
+        }
+
+        .poinroute-hero-section .eyebrow.light {
+            width: 100%;
+            margin: 0 0 10px;
+            text-align: center !important;
+        }
+
+        .poinroute-hero-title {
+            width: 100%;
+            max-width: 330px;
+            margin: 0 auto;
+            text-align: center !important;
+            line-height: 1.08;
+            word-break: keep-all;
+        }
+
+        .poinroute-title-line {
+            display: block;
+            width: 100%;
+            text-align: center !important;
+        }
+
+        .poinroute-hero-desc {
+            width: 100%;
+            max-width: 310px;
+            margin: 14px auto 0;
+            text-align: center !important;
+            line-height: 1.48;
+            word-break: keep-all;
+        }
+
+        .poinroute-desc-line {
+            display: block;
+            width: 100%;
+            text-align: center !important;
+        }
+
+        .poinroute-search-panel.optimized-search {
+
+            padding: 12px;
+            border-radius: 24px;
+            grid-template-columns: 1fr;
+        }
+
+        .poinroute-origin-row,
+        .keyword-search-row {
+            grid-template-columns: 1fr !important;
+        }
+
+        .keyword-search-row button {
+            width: 100%;
+        }
+
+        .poinroute-box {
+            padding: 13px;
+            border-radius: 18px;
+        }
+    }
+
+    @media (max-width: 520px) {
+        .poinroute-hero-title {
+            max-width: 300px;
+            font-size: 30px;
+        }
+
+        .poinroute-hero-desc {
+            max-width: 275px;
+            font-size: 15px;
+        }
+
+        .post-popular-badges {
+            right: 9px;
+            bottom: 9px;
+        }
+
+        .post-popular-badges span {
+            padding: 6px 9px;
+            font-size: 11px;
+        }
+
+        .post-author-row {
+            font-size: 12px;
+        }
+
+        .post-author-name {
+            max-width: 96px;
+        }
+
+        .pr-star-row-card {
+            font-size: 14px;
+        }
+    }
+
+    @media (max-width: 380px) {
+        .poinroute-hero-title {
+            max-width: 280px;
+            font-size: 28px;
+        }
+
+        .poinroute-hero-desc {
+            max-width: 250px;
+            font-size: 14px;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const starRows = document.querySelectorAll(".pr-star-row");
+
+    starRows.forEach(function (row) {
+        const rawRating = parseFloat(row.dataset.rating || "0");
+        const rating = Math.max(0, Math.min(5, Number.isNaN(rawRating) ? 0 : rawRating));
+
+        row.innerHTML = "";
+
+        for (let index = 1; index <= 5; index += 1) {
+            const starValue = Math.max(0, Math.min(1, rating - (index - 1)));
+            const fillPercent = Math.round(starValue * 100);
+
+            const star = document.createElement("span");
+            star.className = "pr-star-icon";
+            star.style.setProperty("--fill", `${fillPercent}%`);
+
+            row.appendChild(star);
+        }
+    });
+});
+</script>
+{% endblock %}

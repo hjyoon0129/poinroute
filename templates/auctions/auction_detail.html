@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'auctions/auctions.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="auction-page">
+    {% if messages %}
+        <div class="auction-messages">
+            {% for message in messages %}
+                <div class="auction-message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <article class="auction-detail-card">
+        <div class="auction-detail-topbar">
+            <a href="{% url 'auctions:list' %}" class="auction-back-btn">목록</a>
+        </div>
+
+        <div class="auction-detail-head">
+            <div class="auction-detail-badges">
+                <span class="auction-status {{ auction.status }}">
+                    {{ auction.get_status_display }}
+                </span>
+
+                <span class="auction-reward-badge">
+                    {{ auction.reward_points }}P 보상
+                </span>
+
+                {% if auction.deadline_at %}
+                    <span
+                        class="auction-deadline auction-deadline-timer js-auction-deadline-timer {% if auction.status != 'open' %}is-closed{% endif %}"
+                        data-deadline="{{ auction.deadline_at|date:'c' }}"
+                        data-status="{{ auction.status }}"
+                        data-status-label="{{ auction.get_status_display }}"
+                        title="마감 {{ auction.deadline_at|date:'Y-m-d H:i' }}"
+                    >
+                        {% if auction.status == "open" %}
+                            마감 계산중...
+                        {% else %}
+                            종료 · {{ auction.get_status_display }}
+                        {% endif %}
+                    </span>
+                {% else %}
+                    <span class="auction-deadline auction-deadline-timer is-ended">
+                        마감일 없음
+                    </span>
+                {% endif %}
+            </div>
+
+            <h1>{{ auction.title }}</h1>
+
+            <div class="auction-author-line">
+                <strong>{{ auction.author_nickname }}</strong>
+                <span>{{ auction.created_at|date:"y-m-d H:i" }}</span>
+            </div>
+        </div>
+
+        <div class="auction-info-panel">
+            <div>
+                <span>출발지</span>
+                <strong>{{ auction.start_area|default:"미정" }}</strong>
+            </div>
+
+            <div>
+                <span>목적지</span>
+                <strong>{{ auction.destination }}</strong>
+            </div>
+
+            <div>
+                <span>여행일</span>
+                <strong>
+                    {% if auction.travel_date %}
+                        {{ auction.travel_date|date:"y-m-d" }}
+                    {% else %}
+                        미정
+                    {% endif %}
+                </strong>
+            </div>
+
+            <div>
+                <span>인원</span>
+                <strong>{{ auction.people_count }}명</strong>
+            </div>
+
+            <div>
+                <span>이동수단</span>
+                <strong>{{ auction.get_transport_display }}</strong>
+            </div>
+
+            <div>
+                <span>예산</span>
+                <strong>{{ auction.budget|default:"미정" }}</strong>
+            </div>
+        </div>
+
+        <div class="auction-request-content">
+            {{ auction.request_detail|linebreaksbr }}
+        </div>
+
+        <div class="auction-detail-actions">
+            {% if can_answer %}
+                <a href="{% url 'auctions:answer_create' auction.pk %}" class="auction-primary-btn">
+                    코스 답변하기
+                </a>
+            {% elif user.is_authenticated and auction.author_id == user.id %}
+                <span class="auction-muted-pill">내가 작성한 의뢰입니다</span>
+            {% elif not user.is_authenticated %}
+                <a href="{% url 'accounts:login' %}" class="auction-primary-btn">
+                    로그인 후 답변
+                </a>
+            {% else %}
+                <span class="auction-muted-pill">답변 작성 불가</span>
+            {% endif %}
+
+            {% if can_cancel %}
+                <form
+                    method="post"
+                    action="{% url 'auctions:cancel' auction.pk %}"
+                    onsubmit="return confirm('의뢰를 취소하고 포인트를 환불받을까요?');"
+                >
+                    {% csrf_token %}
+                    <button type="submit" class="auction-danger-btn">
+                        의뢰 취소/환불
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </article>
+
+    <section class="auction-answer-section">
+        <div class="auction-answer-head">
+            <h2>답변 {{ answers|length }}</h2>
+            <p>의뢰자가 마음에 드는 답변 1개를 채택합니다.</p>
+        </div>
+
+        <div class="auction-answer-list">
+            {% for answer in answers %}
+                <div class="auction-answer-card {% if answer.is_selected %}selected{% endif %}">
+                    <div class="auction-answer-top">
+                        <div>
+                            {% if answer.is_selected %}
+                                <span class="auction-selected-badge">채택 답변</span>
+                            {% endif %}
+
+                            <h3>{{ answer.title }}</h3>
+
+                            <div class="auction-answer-meta">
+                                <strong>{{ answer.author_nickname }}</strong>
+                                <span>{{ answer.created_at|date:"y-m-d H:i" }}</span>
+                            </div>
+                        </div>
+
+                        {% if can_select and not answer.is_selected %}
+                            <form
+                                method="post"
+                                action="{% url 'auctions:select_answer' auction.pk answer.pk %}"
+                                onsubmit="return confirm('이 답변을 채택하고 {{ auction.reward_points }}P를 지급할까요?');"
+                            >
+                                {% csrf_token %}
+                                <button type="submit" class="auction-select-answer-btn">
+                                    채택
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+
+                    {% if answer.summary %}
+                        <p class="auction-answer-summary">
+                            {{ answer.summary }}
+                        </p>
+                    {% endif %}
+
+                    <div class="auction-answer-info">
+                        <span>소요 {{ answer.total_time|default:"미정" }}</span>
+                        <span>비용 {{ answer.total_cost|default:"미정" }}</span>
+                    </div>
+
+                    <div class="auction-answer-content">
+                        {{ answer.content|linebreaksbr }}
+                    </div>
+                </div>
+            {% empty %}
+                <div class="auction-empty">
+                    아직 등록된 답변이 없습니다.
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const timers = document.querySelectorAll(".js-auction-deadline-timer");
+
+    if (!timers.length) {
+        return;
+    }
+
+    function pad(number) {
+        return String(number).padStart(2, "0");
+    }
+
+    function renderTimer(timer) {
+        const deadlineText = timer.dataset.deadline;
+        const status = timer.dataset.status || "open";
+        const statusLabel = timer.dataset.statusLabel || "종료됨";
+
+        timer.classList.remove("is-urgent", "is-ended", "is-today", "is-closed");
+
+        if (status !== "open") {
+            timer.textContent = `종료 · ${statusLabel}`;
+            timer.classList.add("is-closed");
+            return;
+        }
+
+        if (!deadlineText) {
+            timer.textContent = "마감일 없음";
+            timer.classList.add("is-ended");
+            return;
+        }
+
+        const deadline = new Date(deadlineText);
+
+        if (Number.isNaN(deadline.getTime())) {
+            timer.textContent = "마감일 오류";
+            timer.classList.add("is-ended");
+            return;
+        }
+
+        const now = new Date();
+        const diff = deadline.getTime() - now.getTime();
+
+        if (diff <= 0) {
+            timer.textContent = "마감됨";
+            timer.classList.add("is-ended");
+            return;
+        }
+
+        const totalSeconds = Math.floor(diff / 1000);
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor((totalSeconds % 86400) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        if (days > 0) {
+            timer.textContent = `마감 D-${days} ${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+
+            if (days <= 1) {
+                timer.classList.add("is-today");
+            }
+
+            return;
+        }
+
+        timer.textContent = `마감 ${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+        timer.classList.add("is-urgent");
+    }
+
+    function tick() {
+        timers.forEach(function (timer) {
+            const status = timer.dataset.status || "open";
+
+            if (status === "open") {
+                renderTimer(timer);
+            } else {
+                renderTimer(timer);
+            }
+        });
+    }
+
+    tick();
+
+    setInterval(function () {
+        timers.forEach(function (timer) {
+            const status = timer.dataset.status || "open";
+
+            if (status === "open") {
+                renderTimer(timer);
+            }
+        });
+    }, 1000);
+});
+</script>
+{% endblock %}

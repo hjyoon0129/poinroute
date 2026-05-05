@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'points/point_shop.css' %}?v=20260505_confirm_modal_1">
+{% endblock %}
+
+{% block content %}
+<section class="point-shop-shell">
+    {% if messages %}
+        <div class="point-message-list">
+            {% for message in messages %}
+                <div class="point-message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <header class="point-shop-hero">
+        <div class="point-hero-copy">
+            <p class="point-eyebrow light">POINROUTE POINT SHOP</p>
+            <h1>포인트샵</h1>
+            <p>
+                모은 포인트로 쿠폰을 신청하고,<br class="mobile-only">
+                광고 보상으로 포인트를 더 모아보세요.
+            </p>
+        </div>
+
+        <div class="point-balance-card">
+            <span>내 포인트</span>
+            <strong>{{ user_points|default:user.profile.points|default:0 }}P</strong>
+            <a href="{% url 'points:history' %}">포인트 내역 보기</a>
+        </div>
+    </header>
+
+    <section class="point-section">
+        <div class="point-section-head">
+            <div>
+                <p class="point-eyebrow">USE POINT</p>
+                <h2>쿠폰 신청</h2>
+            </div>
+            <span class="point-section-note">신청 즉시 포인트 차감 · 반려 시 자동 환불</span>
+        </div>
+
+        <div class="point-carousel-wrap" data-carousel="reward">
+            <div class="point-carousel-track reward-carousel">
+                {% for item in reward_items %}
+                <article class="reward-card point-carousel-card {% if item.is_sold_out %}soldout{% endif %}">
+                    <div class="reward-card-top">
+                        <div class="reward-emoji">{{ item.emoji }}</div>
+                        <div class="reward-badge">{{ item.get_reward_type_display }}</div>
+                    </div>
+
+                    <h3>{{ item.name }}</h3>
+                    <p>{{ item.description }}</p>
+
+                    <div class="reward-meta">
+                        <span>권면가 {{ item.face_value }}원</span>
+                        <span>재고 {{ item.stock }}개</span>
+                    </div>
+
+                    <div class="reward-price-row">
+                        <strong>{{ item.required_points }}P</strong>
+
+                    </div>
+
+                    {% if item.notice %}
+                        <div class="reward-notice">{{ item.notice|linebreaksbr }}</div>
+                    {% endif %}
+
+                    <form
+                        method="post"
+                        action="{% url 'points:redeem' item.id %}"
+                        class="reward-redeem-form"
+                        data-title="{{ item.name|escape }}"
+                        data-points="{{ item.required_points }}"
+                        data-emoji="{{ item.emoji|escape }}"
+                        data-type="{{ item.get_reward_type_display|escape }}"
+                    >
+                        {% csrf_token %}
+                        <button
+                            type="submit"
+                            {% if item.is_sold_out or user_points < item.required_points %}disabled{% endif %}
+                        >
+                            {% if item.is_sold_out %}
+                                품절
+                            {% elif user_points < item.required_points %}
+                                포인트 부족
+                            {% else %}
+                                신청하기
+                            {% endif %}
+                        </button>
+                    </form>
+                </article>
+                {% empty %}
+                <div class="point-empty">
+                    아직 등록된 포인트샵 상품이 없습니다.
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="point-carousel-dots" data-carousel-dots="reward"></div>
+        </div>
+    </section>
+
+    <section class="point-section">
+        <div class="point-section-head">
+            <div>
+                <p class="point-eyebrow">EARN POINT</p>
+                <h2>포인트 얻기</h2>
+            </div>
+            <span class="point-section-note">초기 버전은 관리자 확인 후 지급</span>
+        </div>
+
+        <div class="point-carousel-wrap" data-carousel="earn">
+            <div class="point-carousel-track earn-carousel">
+                {% for campaign in campaigns %}
+                <article class="earn-card point-carousel-card">
+                    <div class="earn-icon">{{ campaign.emoji }}</div>
+
+                    <h3>{{ campaign.title }}</h3>
+                    <p>{{ campaign.subtitle }}</p>
+
+                    <div class="earn-point">
+                        +{{ campaign.reward_points }}P
+                    </div>
+
+                    <small>하루 최대 {{ campaign.daily_limit }}회</small>
+
+                    <form method="post" action="{% url 'points:claim_ad' campaign.id %}">
+                        {% csrf_token %}
+                        <button type="submit">
+                            광고 보고 포인트 신청
+                        </button>
+                    </form>
+                </article>
+                {% empty %}
+                <div class="point-empty">
+                    현재 진행 중인 포인트 적립 캠페인이 없습니다.
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="point-carousel-dots" data-carousel-dots="earn"></div>
+        </div>
+    </section>
+
+    <section class="point-dashboard-grid">
+        <article class="point-panel">
+            <div class="point-panel-head">
+                <h3>내 쿠폰 신청</h3>
+                <a href="{% url 'points:history' %}">전체보기</a>
+            </div>
+
+            <div class="point-list">
+                {% for redemption in my_redemptions %}
+                    <div class="point-list-row">
+                        <div>
+                            <strong>{{ redemption.item.name }}</strong>
+                            <span>{{ redemption.created_at|date:"Y.m.d H:i" }}</span>
+                        </div>
+                        <em class="status {{ redemption.status }}">
+                            {{ redemption.get_status_display }}
+                        </em>
+                    </div>
+                {% empty %}
+                    <p class="point-muted">신청 내역이 없습니다.</p>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="point-panel">
+            <div class="point-panel-head">
+                <h3>최근 포인트 내역</h3>
+                <a href="{% url 'points:history' %}">전체보기</a>
+            </div>
+
+            <div class="point-list">
+                {% for tx in transactions %}
+                    <div class="point-list-row">
+                        <div>
+                            <strong>{{ tx.reason }}</strong>
+                            <span>{{ tx.created_at|date:"Y.m.d H:i" }}</span>
+                        </div>
+                        <em class="{% if tx.amount > 0 %}plus{% else %}minus{% endif %}">
+                            {% if tx.amount > 0 %}+{% endif %}{{ tx.amount }}P
+                        </em>
+                    </div>
+                {% empty %}
+                    <p class="point-muted">포인트 내역이 없습니다.</p>
+                {% endfor %}
+            </div>
+        </article>
+    </section>
+</section>
+
+<div class="point-confirm-backdrop" id="rewardConfirmModal" aria-hidden="true">
+    <div class="point-confirm-card" role="dialog" aria-modal="true" aria-labelledby="rewardConfirmTitle">
+        <button type="button" class="point-confirm-close" id="rewardConfirmClose" aria-label="닫기">×</button>
+
+        <div class="point-confirm-icon" id="rewardConfirmEmoji">🎁</div>
+
+        <p class="point-confirm-eyebrow">POINT REDEMPTION</p>
+
+        <h2 id="rewardConfirmTitle">쿠폰을 신청할까요?</h2>
+
+        <p class="point-confirm-desc">
+            신청하면 포인트가 즉시 차감되고, 관리자 확인 후 가입 이메일로 쿠폰이 발송됩니다.
+        </p>
+
+        <div class="point-confirm-product">
+            <div>
+                <span id="rewardConfirmType">쿠폰</span>
+                <strong id="rewardConfirmName">상품명</strong>
+            </div>
+            <em id="rewardConfirmPoints">0P</em>
+        </div>
+
+        <div class="point-confirm-warning">
+            반려될 경우 차감된 포인트는 자동으로 환불됩니다.
+        </div>
+
+        <div class="point-confirm-actions">
+            <button type="button" class="point-confirm-cancel" id="rewardConfirmCancel">
+                취소
+            </button>
+            <button type="button" class="point-confirm-submit" id="rewardConfirmSubmit">
+                포인트 차감 후 신청
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const carouselWraps = document.querySelectorAll(".point-carousel-wrap");
+
+    carouselWraps.forEach(function (wrap) {
+        const track = wrap.querySelector(".point-carousel-track");
+        const cards = Array.from(wrap.querySelectorAll(".point-carousel-card"));
+        const name = wrap.dataset.carousel;
+        const dotsBox = document.querySelector(`[data-carousel-dots="${name}"]`);
+
+        if (!track || !dotsBox || cards.length <= 1) {
+            return;
+        }
+
+        dotsBox.innerHTML = "";
+
+        cards.forEach(function (_, index) {
+            const dot = document.createElement("button");
+            dot.type = "button";
+            dot.className = "point-carousel-dot";
+            if (index === 0) {
+                dot.classList.add("is-active");
+            }
+
+            dot.addEventListener("click", function () {
+                const card = cards[index];
+                track.scrollTo({
+                    left: card.offsetLeft - track.offsetLeft,
+                    behavior: "smooth"
+                });
+            });
+
+            dotsBox.appendChild(dot);
+        });
+
+        const dots = Array.from(dotsBox.querySelectorAll(".point-carousel-dot"));
+
+        function updateDots() {
+            let activeIndex = 0;
+            let minDistance = Infinity;
+
+            cards.forEach(function (card, index) {
+                const distance = Math.abs(track.scrollLeft - (card.offsetLeft - track.offsetLeft));
+
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    activeIndex = index;
+                }
+            });
+
+            dots.forEach(function (dot, index) {
+                dot.classList.toggle("is-active", index === activeIndex);
+            });
+        }
+
+        track.addEventListener("scroll", function () {
+            window.requestAnimationFrame(updateDots);
+        });
+
+        window.addEventListener("resize", updateDots);
+    });
+
+    const modal = document.getElementById("rewardConfirmModal");
+    const closeButton = document.getElementById("rewardConfirmClose");
+    const cancelButton = document.getElementById("rewardConfirmCancel");
+    const submitButton = document.getElementById("rewardConfirmSubmit");
+
+    const emojiBox = document.getElementById("rewardConfirmEmoji");
+    const typeBox = document.getElementById("rewardConfirmType");
+    const nameBox = document.getElementById("rewardConfirmName");
+    const pointsBox = document.getElementById("rewardConfirmPoints");
+
+    let selectedForm = null;
+
+    function openConfirmModal(form) {
+        selectedForm = form;
+
+        const title = form.dataset.title || "쿠폰";
+        const points = form.dataset.points || "0";
+        const emoji = form.dataset.emoji || "🎁";
+        const type = form.dataset.type || "쿠폰";
+
+        emojiBox.textContent = emoji;
+        typeBox.textContent = type;
+        nameBox.textContent = title;
+        pointsBox.textContent = `${Number(points).toLocaleString()}P`;
+
+        modal.classList.add("is-open");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("point-confirm-open");
+
+        setTimeout(function () {
+            submitButton.focus();
+        }, 30);
+    }
+
+    function closeConfirmModal() {
+        modal.classList.remove("is-open");
+        modal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("point-confirm-open");
+        selectedForm = null;
+    }
+
+    document.querySelectorAll(".reward-redeem-form").forEach(function (form) {
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+            openConfirmModal(form);
+        });
+    });
+
+    submitButton.addEventListener("click", function () {
+        if (!selectedForm) {
+            return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.textContent = "신청 처리중...";
+
+        HTMLFormElement.prototype.submit.call(selectedForm);
+    });
+
+    cancelButton.addEventListener("click", closeConfirmModal);
+    closeButton.addEventListener("click", closeConfirmModal);
+
+    modal.addEventListener("click", function (event) {
+        if (event.target === modal) {
+            closeConfirmModal();
+        }
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+            closeConfirmModal();
+        }
+    });
+});
+</script>
+{% endblock %}
