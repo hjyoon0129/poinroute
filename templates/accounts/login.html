@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load socialaccount %}
 
 {% block content %}
 <section class="auth-page">
@@ -40,47 +39,47 @@
 
         <div class="social-login-list">
             {% if social_ready.kakao %}
-                {% if request.GET.next %}
-                    <a href="{% provider_login_url 'kakao' process='login' next=request.GET.next %}" class="social-login-btn kakao">
-                        <span class="social-icon">K</span>
-                        <strong>카카오로 계속하기</strong>
-                    </a>
-                {% else %}
-                    <a href="{% provider_login_url 'kakao' process='login' %}" class="social-login-btn kakao">
-                        <span class="social-icon">K</span>
-                        <strong>카카오로 계속하기</strong>
-                    </a>
-                {% endif %}
-            {% else %}
-                <a href="#" class="social-login-btn kakao disabled-social"
-                   onclick="alert('카카오 로그인은 관리자 설정 후 사용할 수 있습니다.'); return false;">
+                <a href="/accounts/kakao/login/?process=login{% if request.GET.next %}&next={{ request.GET.next|urlencode }}{% endif %}"
+                   class="social-login-btn kakao">
                     <span class="social-icon">K</span>
                     <strong>카카오로 계속하기</strong>
                 </a>
+            {% else %}
+                <a href="#"
+                   class="social-login-btn kakao disabled-social"
+                   onclick="alert('카카오 로그인은 관리자 설정 후 사용할 수 있습니다.'); return false;">
+                    <span class="social-icon">K</span>
+                    <strong>카카오 로그인 준비중</strong>
+                </a>
             {% endif %}
 
-            <a href="/accounts/google/login/?process=login{% if request.GET.next %}&next={{ request.GET.next|urlencode }}{% endif %}" class="social-login-btn google">
-                <span class="social-icon">G</span>
-                <strong>Google로 계속하기</strong>
-            </a>
+            {% if social_ready.google %}
+                <a href="/accounts/google/login/?process=login{% if request.GET.next %}&next={{ request.GET.next|urlencode }}{% endif %}"
+                   class="social-login-btn google">
+                    <span class="social-icon">G</span>
+                    <strong>Google로 계속하기</strong>
+                </a>
+            {% else %}
+                <a href="#"
+                   class="social-login-btn google disabled-social"
+                   onclick="alert('Google 로그인은 관리자 설정 후 사용할 수 있습니다.'); return false;">
+                    <span class="social-icon">G</span>
+                    <strong>Google 로그인 준비중</strong>
+                </a>
+            {% endif %}
 
             {% if social_ready.naver %}
-                {% if request.GET.next %}
-                    <a href="{% provider_login_url 'naver' process='login' next=request.GET.next %}" class="social-login-btn naver">
-                        <span class="social-icon">N</span>
-                        <strong>네이버로 계속하기</strong>
-                    </a>
-                {% else %}
-                    <a href="{% provider_login_url 'naver' process='login' %}" class="social-login-btn naver">
-                        <span class="social-icon">N</span>
-                        <strong>네이버로 계속하기</strong>
-                    </a>
-                {% endif %}
-            {% else %}
-                <a href="#" class="social-login-btn naver disabled-social"
-                   onclick="alert('네이버 로그인은 아직 준비중입니다.'); return false;">
+                <a href="/accounts/naver/login/?process=login{% if request.GET.next %}&next={{ request.GET.next|urlencode }}{% endif %}"
+                   class="social-login-btn naver">
                     <span class="social-icon">N</span>
                     <strong>네이버로 계속하기</strong>
+                </a>
+            {% else %}
+                <a href="#"
+                   class="social-login-btn naver disabled-social"
+                   onclick="alert('네이버 로그인은 아직 준비중입니다.'); return false;">
+                    <span class="social-icon">N</span>
+                    <strong>네이버 로그인 준비중</strong>
                 </a>
             {% endif %}
         </div>
@@ -112,7 +111,13 @@
             <div class="auth-field">
                 <div class="auth-label-row">
                     <label for="pin">6자리 핀번호</label>
-                    <a href="{% url 'account_reset_password' %}" class="auth-small-link">핀번호를 잊었나요?</a>
+
+                    {% url 'account_reset_password' as reset_password_url %}
+                    {% if reset_password_url %}
+                        <a href="{{ reset_password_url }}" class="auth-small-link">핀번호를 잊었나요?</a>
+                    {% else %}
+                        <a href="/accounts/password/reset/" class="auth-small-link">핀번호를 잊었나요?</a>
+                    {% endif %}
                 </div>
 
                 <input
@@ -257,7 +262,13 @@
 }
 
 .disabled-social {
-    opacity: 0.72;
+    opacity: 0.54;
+    cursor: not-allowed;
+}
+
+.disabled-social:hover {
+    transform: none;
+    box-shadow: none;
 }
 
 .social-icon {
@@ -424,6 +435,10 @@
 }
 
 @media (max-width: 560px) {
+    .auth-page {
+        padding: 34px 14px 60px;
+    }
+
     .auth-card {
         padding: 30px 20px 24px;
         border-radius: 22px;
@@ -431,6 +446,12 @@
 
     .auth-brand h1 {
         font-size: 26px;
+    }
+
+    .auth-bottom {
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
     }
 }
 </style>

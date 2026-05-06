@@ -15,7 +15,6 @@ from .models import (
 from .services import request_reward_redemption
 
 
-@login_required
 def point_shop(request):
     reward_items = RewardItem.objects.filter(is_active=True).order_by(
         "display_order",
@@ -28,31 +27,38 @@ def point_shop(request):
         "id",
     )
 
-    my_redemptions = RewardRedemption.objects.filter(
-        user=request.user
-    ).select_related("item")[:8]
-
-    my_ad_claims = AdRewardClaim.objects.filter(
-        user=request.user
-    ).select_related("campaign")[:8]
-
-    transactions = PointTransaction.objects.filter(user=request.user)[:12]
-
-    today = timezone.localdate()
-
-    campaign_counts = {
-        row["campaign_id"]: row["count"]
-        for row in AdRewardClaim.objects.filter(
-            user=request.user,
-            created_at__date=today,
-        )
-        .values("campaign_id")
-        .annotate(count=models.Count("id"))
-    }
-
     user_points = 0
-    if hasattr(request.user, "profile"):
-        user_points = request.user.profile.points or 0
+    campaign_counts = {}
+
+    my_redemptions = RewardRedemption.objects.none()
+    my_ad_claims = AdRewardClaim.objects.none()
+    transactions = PointTransaction.objects.none()
+
+    if request.user.is_authenticated:
+        my_redemptions = RewardRedemption.objects.filter(
+            user=request.user
+        ).select_related("item")[:8]
+
+        my_ad_claims = AdRewardClaim.objects.filter(
+            user=request.user
+        ).select_related("campaign")[:8]
+
+        transactions = PointTransaction.objects.filter(user=request.user)[:12]
+
+        today = timezone.localdate()
+
+        campaign_counts = {
+            row["campaign_id"]: row["count"]
+            for row in AdRewardClaim.objects.filter(
+                user=request.user,
+                created_at__date=today,
+            )
+            .values("campaign_id")
+            .annotate(count=models.Count("id"))
+        }
+
+        if hasattr(request.user, "profile"):
+            user_points = request.user.profile.points or 0
 
     return render(
         request,
@@ -69,7 +75,7 @@ def point_shop(request):
     )
 
 
-@login_required
+@login_required(login_url="/accounts/login/")
 def point_history(request):
     transactions = PointTransaction.objects.filter(user=request.user)
 
@@ -98,7 +104,7 @@ def point_history(request):
 
 
 @require_POST
-@login_required
+@login_required(login_url="/accounts/login/")
 def redeem_reward(request, item_id):
     try:
         redemption = request_reward_redemption(request.user, item_id)
@@ -118,7 +124,7 @@ def redeem_reward(request, item_id):
 
 
 @require_POST
-@login_required
+@login_required(login_url="/accounts/login/")
 def claim_ad_reward(request, campaign_id):
     campaign = get_object_or_404(
         AdRewardCampaign,
@@ -152,7 +158,7 @@ def claim_ad_reward(request, campaign_id):
 
 
 @require_POST
-@login_required
+@login_required(login_url="/accounts/login/")
 def read_reward_notice(request, redemption_id):
     RewardRedemption.objects.filter(
         id=redemption_id,
@@ -164,7 +170,7 @@ def read_reward_notice(request, redemption_id):
 
 
 @require_POST
-@login_required
+@login_required(login_url="/accounts/login/")
 def read_ad_notice(request, claim_id):
     AdRewardClaim.objects.filter(
         id=claim_id,

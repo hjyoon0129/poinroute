@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'points/point_shop.css' %}?v=20260505_1">
+<link rel="stylesheet" href="{% static 'points/point_shop.css' %}?v=20260506_history_1">
 {% endblock %}
 
 {% block content %}
@@ -16,7 +16,7 @@
 
         <div class="point-balance-card">
             <span>내 포인트</span>
-            <strong>{{ user.profile.points|default:0 }}P</strong>
+            <strong>{{ user_points|default:0 }}P</strong>
             <a href="{% url 'points:shop' %}">포인트샵으로</a>
         </div>
     </header>
@@ -41,6 +41,52 @@
                 <p class="point-muted">포인트 내역이 없습니다.</p>
             {% endfor %}
         </div>
+    </section>
+
+    <section class="point-dashboard-grid">
+        <article class="point-panel">
+            <div class="point-panel-head">
+                <h3>쿠폰 신청 내역</h3>
+            </div>
+
+            <div class="point-list">
+                {% for redemption in redemptions %}
+                    <div class="point-list-row">
+                        <div>
+                            <strong>{{ redemption.item.name }}</strong>
+                            <span>{{ redemption.created_at|date:"Y.m.d H:i" }}</span>
+                        </div>
+                        <em class="status {{ redemption.status }}">
+                            {{ redemption.get_status_display }}
+                        </em>
+                    </div>
+                {% empty %}
+                    <p class="point-muted">쿠폰 신청 내역이 없습니다.</p>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="point-panel">
+            <div class="point-panel-head">
+                <h3>광고 포인트 신청 내역</h3>
+            </div>
+
+            <div class="point-list">
+                {% for claim in ad_claims %}
+                    <div class="point-list-row">
+                        <div>
+                            <strong>{{ claim.campaign.title }}</strong>
+                            <span>{{ claim.created_at|date:"Y.m.d H:i" }}</span>
+                        </div>
+                        <em class="status {{ claim.status }}">
+                            {{ claim.get_status_display }}
+                        </em>
+                    </div>
+                {% empty %}
+                    <p class="point-muted">광고 포인트 신청 내역이 없습니다.</p>
+                {% endfor %}
+            </div>
+        </article>
     </section>
 </section>
 {% endblock %}

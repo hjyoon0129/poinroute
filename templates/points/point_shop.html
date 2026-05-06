@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'points/point_shop.css' %}?v=20260505_confirm_modal_1">
+<link rel="stylesheet" href="{% static 'points/point_shop.css' %}?v=20260506_guest_open_1">
 {% endblock %}
 
 {% block content %}
@@ -26,11 +26,28 @@
         </div>
 
         <div class="point-balance-card">
-            <span>내 포인트</span>
-            <strong>{{ user_points|default:user.profile.points|default:0 }}P</strong>
-            <a href="{% url 'points:history' %}">포인트 내역 보기</a>
+            {% if request.user.is_authenticated %}
+                <span>내 포인트</span>
+                <strong>{{ user_points|default:0 }}P</strong>
+                <a href="{% url 'points:history' %}">포인트 내역 보기</a>
+            {% else %}
+                <span>내 포인트</span>
+                <strong>로그인 후 확인</strong>
+                <a href="#"
+                   class="js-login-required"
+                   data-login-message="포인트 내역은 로그인 후 확인할 수 있어요.">
+                    포인트 내역 보기
+                </a>
+            {% endif %}
         </div>
     </header>
+
+    {% if not request.user.is_authenticated %}
+        <div class="point-guest-notice">
+            <strong>포인트샵은 둘러볼 수 있어요.</strong>
+            <span>쿠폰 신청, 광고 포인트 적립, 내역 확인은 로그인 후 이용할 수 있습니다.</span>
+        </div>
+    {% endif %}
 
     <section class="point-section">
         <div class="point-section-head">
@@ -60,36 +77,52 @@
 
                     <div class="reward-price-row">
                         <strong>{{ item.required_points }}P</strong>
-
                     </div>
 
                     {% if item.notice %}
                         <div class="reward-notice">{{ item.notice|linebreaksbr }}</div>
                     {% endif %}
 
-                    <form
-                        method="post"
-                        action="{% url 'points:redeem' item.id %}"
-                        class="reward-redeem-form"
-                        data-title="{{ item.name|escape }}"
-                        data-points="{{ item.required_points }}"
-                        data-emoji="{{ item.emoji|escape }}"
-                        data-type="{{ item.get_reward_type_display|escape }}"
-                    >
-                        {% csrf_token %}
-                        <button
-                            type="submit"
-                            {% if item.is_sold_out or user_points < item.required_points %}disabled{% endif %}
+                    {% if request.user.is_authenticated %}
+                        <form
+                            method="post"
+                            action="{% url 'points:redeem' item.id %}"
+                            class="reward-redeem-form"
+                            data-title="{{ item.name|escape }}"
+                            data-points="{{ item.required_points }}"
+                            data-emoji="{{ item.emoji|escape }}"
+                            data-type="{{ item.get_reward_type_display|escape }}"
                         >
-                            {% if item.is_sold_out %}
-                                품절
-                            {% elif user_points < item.required_points %}
-                                포인트 부족
-                            {% else %}
-                                신청하기
-                            {% endif %}
-                        </button>
-                    </form>
+                            {% csrf_token %}
+                            <button
+                                type="submit"
+                                {% if item.is_sold_out or user_points < item.required_points %}disabled{% endif %}
+                            >
+                                {% if item.is_sold_out %}
+                                    품절
+                                {% elif user_points < item.required_points %}
+                                    포인트 부족
+                                {% else %}
+                                    신청하기
+                                {% endif %}
+                            </button>
+                        </form>
+                    {% else %}
+                        <div class="point-action-box">
+                            <button
+                                type="button"
+                                class="js-login-required"
+                                data-login-message="쿠폰 신청은 로그인 후 이용할 수 있어요."
+                                {% if item.is_sold_out %}disabled{% endif %}
+                            >
+                                {% if item.is_sold_out %}
+                                    품절
+                                {% else %}
+                                    로그인 후 신청
+                                {% endif %}
+                            </button>
+                        </div>
+                    {% endif %}
                 </article>
                 {% empty %}
                 <div class="point-empty">
@@ -126,12 +159,24 @@
 
                     <small>하루 최대 {{ campaign.daily_limit }}회</small>
 
-                    <form method="post" action="{% url 'points:claim_ad' campaign.id %}">
-                        {% csrf_token %}
-                        <button type="submit">
-                            광고 보고 포인트 신청
-                        </button>
-                    </form>
+                    {% if request.user.is_authenticated %}
+                        <form method="post" action="{% url 'points:claim_ad' campaign.id %}">
+                            {% csrf_token %}
+                            <button type="submit">
+                                광고 보고 포인트 신청
+                            </button>
+                        </form>
+                    {% else %}
+                        <div class="point-action-box">
+                            <button
+                                type="button"
+                                class="js-login-required"
+                                data-login-message="광고 포인트 신청은 로그인 후 이용할 수 있어요."
+                            >
+                                로그인 후 포인트 신청
+                            </button>
+                        </div>
+                    {% endif %}
                 </article>
                 {% empty %}
                 <div class="point-empty">
@@ -148,46 +193,70 @@
         <article class="point-panel">
             <div class="point-panel-head">
                 <h3>내 쿠폰 신청</h3>
-                <a href="{% url 'points:history' %}">전체보기</a>
+                {% if request.user.is_authenticated %}
+                    <a href="{% url 'points:history' %}">전체보기</a>
+                {% else %}
+                    <a href="#"
+                       class="js-login-required"
+                       data-login-message="쿠폰 신청 내역은 로그인 후 확인할 수 있어요.">
+                        전체보기
+                    </a>
+                {% endif %}
             </div>
 
             <div class="point-list">
-                {% for redemption in my_redemptions %}
-                    <div class="point-list-row">
-                        <div>
-                            <strong>{{ redemption.item.name }}</strong>
-                            <span>{{ redemption.created_at|date:"Y.m.d H:i" }}</span>
+                {% if request.user.is_authenticated %}
+                    {% for redemption in my_redemptions %}
+                        <div class="point-list-row">
+                            <div>
+                                <strong>{{ redemption.item.name }}</strong>
+                                <span>{{ redemption.created_at|date:"Y.m.d H:i" }}</span>
+                            </div>
+                            <em class="status {{ redemption.status }}">
+                                {{ redemption.get_status_display }}
+                            </em>
                         </div>
-                        <em class="status {{ redemption.status }}">
-                            {{ redemption.get_status_display }}
-                        </em>
-                    </div>
-                {% empty %}
-                    <p class="point-muted">신청 내역이 없습니다.</p>
-                {% endfor %}
+                    {% empty %}
+                        <p class="point-muted">신청 내역이 없습니다.</p>
+                    {% endfor %}
+                {% else %}
+                    <p class="point-muted">로그인하면 쿠폰 신청 내역을 확인할 수 있어요.</p>
+                {% endif %}
             </div>
         </article>
 
         <article class="point-panel">
             <div class="point-panel-head">
                 <h3>최근 포인트 내역</h3>
-                <a href="{% url 'points:history' %}">전체보기</a>
+                {% if request.user.is_authenticated %}
+                    <a href="{% url 'points:history' %}">전체보기</a>
+                {% else %}
+                    <a href="#"
+                       class="js-login-required"
+                       data-login-message="포인트 내역은 로그인 후 확인할 수 있어요.">
+                        전체보기
+                    </a>
+                {% endif %}
             </div>
 
             <div class="point-list">
-                {% for tx in transactions %}
-                    <div class="point-list-row">
-                        <div>
-                            <strong>{{ tx.reason }}</strong>
-                            <span>{{ tx.created_at|date:"Y.m.d H:i" }}</span>
+                {% if request.user.is_authenticated %}
+                    {% for tx in transactions %}
+                        <div class="point-list-row">
+                            <div>
+                                <strong>{{ tx.reason }}</strong>
+                                <span>{{ tx.created_at|date:"Y.m.d H:i" }}</span>
+                            </div>
+                            <em class="{% if tx.amount > 0 %}plus{% else %}minus{% endif %}">
+                                {% if tx.amount > 0 %}+{% endif %}{{ tx.amount }}P
+                            </em>
                         </div>
-                        <em class="{% if tx.amount > 0 %}plus{% else %}minus{% endif %}">
-                            {% if tx.amount > 0 %}+{% endif %}{{ tx.amount }}P
-                        </em>
-                    </div>
-                {% empty %}
-                    <p class="point-muted">포인트 내역이 없습니다.</p>
-                {% endfor %}
+                    {% empty %}
+                        <p class="point-muted">포인트 내역이 없습니다.</p>
+                    {% endfor %}
+                {% else %}
+                    <p class="point-muted">로그인하면 적립/사용 내역을 확인할 수 있어요.</p>
+                {% endif %}
             </div>
         </article>
     </section>
@@ -230,6 +299,194 @@
     </div>
 </div>
 
+<div class="point-login-backdrop" id="pointLoginModal" aria-hidden="true">
+    <div class="point-login-card" role="dialog" aria-modal="true" aria-labelledby="pointLoginTitle">
+        <button type="button" class="point-login-close" id="pointLoginClose" aria-label="닫기">×</button>
+
+        <div class="point-login-icon">🔐</div>
+
+        <p class="point-login-eyebrow">LOGIN REQUIRED</p>
+
+        <h2 id="pointLoginTitle">로그인이 필요해요</h2>
+
+        <p class="point-login-desc" id="pointLoginMessage">
+            이 기능은 로그인 후 이용할 수 있어요.
+        </p>
+
+        <div class="point-login-actions">
+            <button type="button" class="point-login-cancel" id="pointLoginCancel">
+                계속 둘러보기
+            </button>
+            <a class="point-login-submit" href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}">
+                로그인하기
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.point-guest-notice {
+    margin: 18px 0 26px;
+    padding: 16px 18px;
+    border-radius: 18px;
+    background: #eef2ff;
+    border: 1px solid #dbe4ff;
+    color: #243b8f;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 14px;
+    font-weight: 750;
+}
+
+.point-guest-notice strong {
+    color: #1d2f75;
+    font-size: 15px;
+    font-weight: 950;
+}
+
+.point-action-box button {
+    width: 100%;
+    height: 46px;
+    border: 0;
+    border-radius: 14px;
+    background: #3157f6;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 950;
+    cursor: pointer;
+}
+
+.point-action-box button:disabled {
+    background: #c9d1df;
+    color: #ffffff;
+    cursor: not-allowed;
+}
+
+.point-login-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.52);
+}
+
+.point-login-backdrop.is-open {
+    display: flex;
+}
+
+.point-login-card {
+    width: min(100%, 420px);
+    padding: 30px 26px 24px;
+    border-radius: 26px;
+    background: #ffffff;
+    border: 1px solid #e5eaf4;
+    box-shadow: 0 30px 90px rgba(15, 23, 42, 0.28);
+    position: relative;
+    text-align: center;
+}
+
+.point-login-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 999px;
+    background: #f1f4f9;
+    color: #667085;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.point-login-icon {
+    width: 58px;
+    height: 58px;
+    margin: 0 auto 12px;
+    border-radius: 20px;
+    background: #eef2ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+}
+
+.point-login-eyebrow {
+    margin: 0 0 8px;
+    color: #3157f6;
+    font-size: 11px;
+    font-weight: 950;
+    letter-spacing: 0.14em;
+}
+
+.point-login-card h2 {
+    margin: 0;
+    color: #111827;
+    font-size: 25px;
+    font-weight: 950;
+    letter-spacing: -0.05em;
+}
+
+.point-login-desc {
+    margin: 12px 0 22px;
+    color: #667085;
+    font-size: 14px;
+    line-height: 1.65;
+    font-weight: 700;
+}
+
+.point-login-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.point-login-cancel,
+.point-login-submit {
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 950;
+    text-decoration: none;
+}
+
+.point-login-cancel {
+    border: 1px solid #d8deea;
+    background: #ffffff;
+    color: #475467;
+    cursor: pointer;
+}
+
+.point-login-submit {
+    border: 1px solid #3157f6;
+    background: #3157f6;
+    color: #ffffff;
+}
+
+body.point-login-open {
+    overflow: hidden;
+}
+
+@media (max-width: 560px) {
+    .point-login-card {
+        padding: 28px 20px 22px;
+        border-radius: 22px;
+    }
+
+    .point-login-actions {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const carouselWraps = document.querySelectorAll(".point-carousel-wrap");
@@ -250,6 +507,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const dot = document.createElement("button");
             dot.type = "button";
             dot.className = "point-carousel-dot";
+
             if (index === 0) {
                 dot.classList.add("is-active");
             }
@@ -305,6 +563,10 @@ document.addEventListener("DOMContentLoaded", function () {
     let selectedForm = null;
 
     function openConfirmModal(form) {
+        if (!modal) {
+            return;
+        }
+
         selectedForm = form;
 
         const title = form.dataset.title || "쿠폰";
@@ -327,10 +589,19 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function closeConfirmModal() {
+        if (!modal) {
+            return;
+        }
+
         modal.classList.remove("is-open");
         modal.setAttribute("aria-hidden", "true");
         document.body.classList.remove("point-confirm-open");
         selectedForm = null;
+
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = "포인트 차감 후 신청";
+        }
     }
 
     document.querySelectorAll(".reward-redeem-form").forEach(function (form) {
@@ -340,29 +611,101 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    submitButton.addEventListener("click", function () {
-        if (!selectedForm) {
+    if (submitButton) {
+        submitButton.addEventListener("click", function () {
+            if (!selectedForm) {
+                return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.textContent = "신청 처리중...";
+
+            HTMLFormElement.prototype.submit.call(selectedForm);
+        });
+    }
+
+    if (cancelButton) {
+        cancelButton.addEventListener("click", closeConfirmModal);
+    }
+
+    if (closeButton) {
+        closeButton.addEventListener("click", closeConfirmModal);
+    }
+
+    if (modal) {
+        modal.addEventListener("click", function (event) {
+            if (event.target === modal) {
+                closeConfirmModal();
+            }
+        });
+    }
+
+    const loginModal = document.getElementById("pointLoginModal");
+    const loginMessage = document.getElementById("pointLoginMessage");
+    const loginClose = document.getElementById("pointLoginClose");
+    const loginCancel = document.getElementById("pointLoginCancel");
+
+    function openLoginModal(message) {
+        if (!loginModal) {
             return;
         }
 
-        submitButton.disabled = true;
-        submitButton.textContent = "신청 처리중...";
-
-        HTMLFormElement.prototype.submit.call(selectedForm);
-    });
-
-    cancelButton.addEventListener("click", closeConfirmModal);
-    closeButton.addEventListener("click", closeConfirmModal);
-
-    modal.addEventListener("click", function (event) {
-        if (event.target === modal) {
-            closeConfirmModal();
+        if (loginMessage) {
+            loginMessage.textContent = message || "이 기능은 로그인 후 이용할 수 있어요.";
         }
+
+        loginModal.classList.add("is-open");
+        loginModal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("point-login-open");
+    }
+
+    function closeLoginModal() {
+        if (!loginModal) {
+            return;
+        }
+
+        loginModal.classList.remove("is-open");
+        loginModal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("point-login-open");
+    }
+
+    document.querySelectorAll(".js-login-required").forEach(function (button) {
+        button.addEventListener("click", function (event) {
+            event.preventDefault();
+
+            if (button.disabled) {
+                return;
+            }
+
+            openLoginModal(button.dataset.loginMessage);
+        });
     });
+
+    if (loginClose) {
+        loginClose.addEventListener("click", closeLoginModal);
+    }
+
+    if (loginCancel) {
+        loginCancel.addEventListener("click", closeLoginModal);
+    }
+
+    if (loginModal) {
+        loginModal.addEventListener("click", function (event) {
+            if (event.target === loginModal) {
+                closeLoginModal();
+            }
+        });
+    }
 
     document.addEventListener("keydown", function (event) {
-        if (event.key === "Escape" && modal.classList.contains("is-open")) {
-            closeConfirmModal();
+        if (event.key === "Escape") {
+            if (modal && modal.classList.contains("is-open")) {
+                closeConfirmModal();
+            }
+
+            if (loginModal && loginModal.classList.contains("is-open")) {
+                closeLoginModal();
+            }
         }
     });
 });
