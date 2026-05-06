@@ -95,272 +95,38 @@
         </div>
     </header>
 
-    <!-- 모바일 전용 슬라이더 -->
-    <section class="mobile-route-slider-shell">
-        <div class="mobile-slide-hint">
-            <span>옆으로 넘겨서 일정 보기</span>
-            <b>← swipe →</b>
-        </div>
+    <!-- 모바일 전용 -->
+    <section class="mobile-route-explorer" id="mobileRouteExplorer">
+        <section class="mobile-route-shell-card">
+            <div class="detail-card-head">
+                <div>
+                    <p class="eyebrow">POINROUTE MAP</p>
+                    <h3 id="mobileMapTitle">전체 루트 지도</h3>
+                </div>
+            </div>
 
-        <div class="mobile-route-slider" id="mobileRouteSlider">
-            <article class="mobile-route-slide">
-                <section class="mobile-slide-card mobile-map-slide-card">
-                    <div class="detail-card-head">
-                        <div>
-                            <p class="eyebrow">POINROUTE MAP</p>
-                            <h3>전체 루트 지도</h3>
-                        </div>
-                    </div>
+            <div id="mobile-course-map" class="detail-map mobile-detail-map">
+                <div class="map-empty-state">지도 정보를 불러오는 중입니다.</div>
+            </div>
 
-                    <div id="mobile-course-map" class="detail-map mobile-detail-map">
-                        <div class="map-empty-state">지도 정보를 불러오는 중입니다.</div>
-                    </div>
-
-                    <div class="mobile-flow-box">
-                        <div class="detail-card-head flow-head">
-                            <div>
-                                <p class="eyebrow">ROUTE FLOW</p>
-                                <h3>루트 순서</h3>
-                            </div>
-                        </div>
-
-                        <ol class="route-sequence route-sequence-grouped mobile-route-sequence">
-                            <li class="route-sequence-item is-start">
-                                <span class="route-seq-no start">S</span>
-                                <div>
-                                    <strong>
-                                        {% if post.start_place_name %}
-                                            {{ post.start_place_name }} 출발
-                                        {% elif post.start_region or post.start_district %}
-                                            {{ post.start_region }} {{ post.start_district }} 출발
-                                        {% else %}
-                                            출발지 미정
-                                        {% endif %}
-                                    </strong>
-
-                                    {% if post.start_time %}
-                                        <small>{{ post.start_time }}</small>
-                                    {% endif %}
-                                </div>
-                            </li>
-
-                            {% for group in grouped_places %}
-                                <li class="route-day-divider">
-                                    <span>{{ group.day }}일차</span>
-                                    <em>사용돈 {{ group.daily_cost }}원</em>
-                                </li>
-
-                                {% for place in group.places %}
-                                <li class="route-sequence-item">
-                                    <span class="route-seq-no">{{ forloop.counter }}</span>
-                                    <div>
-                                        <strong>{{ place.place_name }}</strong>
-                                        <small>
-                                            {% if place.visit_time_str %}{{ place.visit_time_str }}{% else %}시간 미정{% endif %}
-                                            {% if place.cost > 0 %} · {{ place.cost }}원{% endif %}
-                                        </small>
-                                    </div>
-                                </li>
-                                {% endfor %}
-                            {% endfor %}
-
-                            <li class="route-sequence-item is-end">
-                                <span class="route-seq-no end">E</span>
-                                <div>
-                                    <strong>{{ post.destination }} 도착</strong>
-                                </div>
-                            </li>
-                        </ol>
-                    </div>
-                </section>
-            </article>
-
-            {% for group in grouped_places %}
-            <article class="mobile-route-slide">
-                <section class="mobile-slide-card mobile-day-slide-card">
-                    <div class="mobile-day-slide-head">
-                        <span class="day-badge">{{ group.day }}일차</span>
-                        <span class="day-cost-badge">사용돈 {{ group.daily_cost }}원</span>
-                    </div>
-
-                    <div class="route-card-list mobile-route-card-list">
-                        {% for place in group.places %}
-                        <article class="route-card route-card-clean mobile-route-card">
-                            <div class="route-card-media">
-                                {% if place.image %}
-                                    <img src="{{ place.image.url }}" alt="{{ place.place_name }}">
-                                {% else %}
-                                    <div class="route-card-noimg">No Image</div>
-                                {% endif %}
-                            </div>
-
-                            <div class="route-card-body">
-                                <div class="route-card-topline">
-                                    <span class="route-card-label">방문장소</span>
-                                    <div class="route-card-facts">
-                                        {% if place.visit_time_str %}
-                                            <span>⏰ {{ place.visit_time_str }}</span>
-                                        {% endif %}
-                                        {% if place.cost > 0 %}
-                                            <span>💰 {{ place.cost }}원</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-
-                                <h3 class="route-card-title">{{ place.place_name }}</h3>
-                                <p class="route-card-desc">{{ place.description|default:"아직 설명이 등록되지 않았어요."|linebreaksbr }}</p>
-                            </div>
-                        </article>
-                        {% endfor %}
-                    </div>
-                </section>
-            </article>
-            {% empty %}
-            <article class="mobile-route-slide">
-                <section class="mobile-slide-card">
-                    <div class="empty-detail-message">
-                        등록된 루트가 없습니다.
-                    </div>
-                </section>
-            </article>
-            {% endfor %}
-
-            <article class="mobile-route-slide">
-                <section class="mobile-slide-card mobile-review-slide-card">
-                    <div class="route-review-head">
-                        <div>
-                            <p class="eyebrow">ROUTE REVIEW</p>
-                            <h2>루트 리뷰</h2>
-                        </div>
-
-                        <div class="route-review-score-card {% if not post.has_rating %}empty{% endif %}">
-                            {% if post.has_rating %}
-                                <span
-                                    class="pr-star-row pr-star-row-review"
-                                    data-rating="{{ post.rating_avg_display }}"
-                                    aria-label="별점 {{ post.rating_avg_display }}점"
-                                ></span>
-                                <strong>{{ post.rating_avg_display }}</strong>
-                                <span class="rating-count-text">({{ post.rating_count }})</span>
-                            {% else %}
-                                <strong>0.0</strong>
-                                <span class="rating-count-text">리뷰 없음</span>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="route-review-form-card">
-                        {% if user.is_authenticated %}
-                            {% if post.author_id == user.id %}
-                                <div class="route-review-login-box">
-                                    본인이 작성한 루트에는 리뷰를 남길 수 없습니다.
-                                </div>
-                            {% else %}
-                                <form method="POST" action="{% url 'posts:review' post.pk %}" class="route-review-form">
-                                    {% csrf_token %}
-
-                                    <div class="review-star-input">
-                                        <input type="radio" name="rating" id="mobile_rating5" value="5" required>
-                                        <label for="mobile_rating5">★</label>
-
-                                        <input type="radio" name="rating" id="mobile_rating4" value="4">
-                                        <label for="mobile_rating4">★</label>
-
-                                        <input type="radio" name="rating" id="mobile_rating3" value="3">
-                                        <label for="mobile_rating3">★</label>
-
-                                        <input type="radio" name="rating" id="mobile_rating2" value="2">
-                                        <label for="mobile_rating2">★</label>
-
-                                        <input type="radio" name="rating" id="mobile_rating1" value="1">
-                                        <label for="mobile_rating1">★</label>
-                                    </div>
-
-                                    <textarea
-                                        name="comment"
-                                        class="route-review-textarea"
-                                        placeholder="이 루트가 어땠는지 리뷰를 남겨주세요."
-                                        maxlength="1000"
-                                    ></textarea>
-
-                                    <button type="submit" class="route-review-submit">
-                                        별점 리뷰 등록하기
-                                    </button>
-                                </form>
-                            {% endif %}
-                        {% else %}
-                            <div class="route-review-login-box">
-                                리뷰를 남기려면 로그인이 필요합니다.
-                                <a href="{% url 'accounts:login' %}?next={{ request.get_full_path }}">로그인하기</a>
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="route-review-list">
-                        {% for review in post.active_reviews %}
-                            <article class="route-review-card">
-                                <div class="route-review-card-top">
-                                    <div class="route-review-author-box">
-                                        <strong>{{ review.author_nickname }}</strong>
-                                        <span class="route-review-date">{{ review.created_at|date:"Y.m.d H:i" }}</span>
-                                    </div>
-
-                                    <div class="route-review-card-score">
-                                        <span
-                                            class="pr-star-row pr-star-row-review-card"
-                                            data-rating="{{ review.rating }}"
-                                            aria-label="별점 {{ review.rating }}점"
-                                        ></span>
-                                        <b>{{ review.rating }}.0</b>
-                                    </div>
-                                </div>
-
-                                {% if review.comment %}
-                                    <p>{{ review.comment|linebreaksbr }}</p>
-                                {% else %}
-                                    <p class="empty-comment">별점만 남긴 리뷰입니다.</p>
-                                {% endif %}
-                            </article>
-                        {% empty %}
-                            <div class="route-review-empty">
-                                아직 리뷰가 없습니다. 첫 리뷰를 남겨보세요.
-                            </div>
-                        {% endfor %}
-                    </div>
-                </section>
-            </article>
-        </div>
-
-        <div class="mobile-slide-dots" id="mobileSlideDots"></div>
-    </section>
-
-    <!-- PC / 태블릿 기본 레이아웃 -->
-    <div class="detail-layout desktop-detail-layout">
-        <aside class="detail-sidebar route-sticky-panel">
-            <section class="detail-card route-map-flow-card">
-                <div class="route-map-area">
-                    <div class="detail-card-head">
-                        <div>
-                            <p class="eyebrow">POINROUTE MAP</p>
-                            <h3>전체 루트 지도</h3>
-                        </div>
-                    </div>
-
-                    <div id="course-map" class="detail-map">
-                        <div class="map-empty-state">지도 정보를 불러오는 중입니다.</div>
+            <div class="mobile-flow-box">
+                <div class="detail-card-head flow-head">
+                    <div>
+                        <p class="eyebrow">ROUTE FLOW</p>
+                        <h3>루트 순서</h3>
                     </div>
                 </div>
 
-                <div class="route-flow-area">
-                    <div class="detail-card-head flow-head">
-                        <div>
-                            <p class="eyebrow">ROUTE FLOW</p>
-                            <h3>루트 순서</h3>
-                        </div>
-                    </div>
+                <div class="route-day-tabs mobile-route-day-tabs" data-route-tabs="mobile">
+                    <button type="button" class="route-day-tab is-active" data-day="all">전체</button>
+                    {% for group in grouped_places %}
+                        <button type="button" class="route-day-tab" data-day="{{ group.day }}">DAY {{ group.day }}</button>
+                    {% endfor %}
+                </div>
 
-                    <ol class="route-sequence route-sequence-grouped">
-                        <li class="route-sequence-item is-start">
+                <div class="mobile-route-list-view" id="mobileRouteListView">
+                    <ol class="route-sequence route-sequence-grouped mobile-route-sequence">
+                        <li class="route-sequence-item is-start mobile-start-item js-route-start">
                             <span class="route-seq-no start">S</span>
                             <div>
                                 <strong>
@@ -380,13 +146,20 @@
                         </li>
 
                         {% for group in grouped_places %}
-                            <li class="route-day-divider">
+                            <li class="route-day-divider mobile-day-divider js-day-divider" data-day-section="{{ group.day }}">
                                 <span>{{ group.day }}일차</span>
                                 <em>사용돈 {{ group.daily_cost }}원</em>
                             </li>
 
                             {% for place in group.places %}
-                            <li class="route-sequence-item">
+                            <li
+                                class="route-sequence-item route-clickable-place mobile-place-row js-place-row"
+                                data-day="{{ group.day }}"
+                                data-place-id="{{ place.pk }}"
+                                role="button"
+                                tabindex="0"
+                                aria-label="{{ place.place_name }} 상세 보기"
+                            >
                                 <span class="route-seq-no">{{ forloop.counter }}</span>
                                 <div>
                                     <strong>{{ place.place_name }}</strong>
@@ -399,7 +172,136 @@
                             {% endfor %}
                         {% endfor %}
 
-                        <li class="route-sequence-item is-end">
+                        <li class="route-sequence-item is-end mobile-end-item js-route-end">
+                            <span class="route-seq-no end">E</span>
+                            <div>
+                                <strong>{{ post.destination }} 도착</strong>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+
+                <div class="mobile-place-detail-view" id="mobilePlaceDetailView" hidden>
+                    <button type="button" class="mobile-detail-back-btn" id="mobilePlaceBackBtn">
+                        ← 루트 순서로 돌아가기
+                    </button>
+
+                    {% for group in grouped_places %}
+                        {% for place in group.places %}
+                        <article class="mobile-place-detail-card" data-place-detail-id="{{ place.pk }}" hidden>
+                            <div class="route-card-media mobile-place-detail-media">
+                                {% if place.image %}
+                                    <img src="{{ place.image.url }}" alt="{{ place.place_name }}">
+                                {% else %}
+                                    <div class="route-card-noimg">No Image</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="route-card-body mobile-place-detail-body">
+                                <div class="route-card-topline">
+                                    <span class="route-card-label">{{ group.day }}일차 {{ forloop.counter }}번째 장소</span>
+                                    <div class="route-card-facts">
+                                        {% if place.visit_time_str %}
+                                            <span>⏰ {{ place.visit_time_str }}</span>
+                                        {% endif %}
+                                        {% if place.cost > 0 %}
+                                            <span>💰 {{ place.cost }}원</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <h3 class="route-card-title">{{ place.place_name }}</h3>
+                                <p class="route-card-desc">{{ place.description|default:"아직 설명이 등록되지 않았어요."|linebreaksbr }}</p>
+                            </div>
+                        </article>
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    </section>
+
+    <!-- PC / 태블릿 -->
+    <div class="detail-layout desktop-detail-layout">
+        <aside class="detail-sidebar route-sticky-panel">
+            <section class="detail-card route-map-flow-card">
+                <div class="route-map-area">
+                    <div class="detail-card-head">
+                        <div>
+                            <p class="eyebrow">POINROUTE MAP</p>
+                            <h3 id="desktopMapTitle">전체 루트 지도</h3>
+                        </div>
+                    </div>
+
+                    <div id="course-map" class="detail-map desktop-detail-map">
+                        <div class="map-empty-state">지도 정보를 불러오는 중입니다.</div>
+                    </div>
+                </div>
+
+                <div class="route-flow-area">
+                    <div class="detail-card-head flow-head">
+                        <div>
+                            <p class="eyebrow">ROUTE FLOW</p>
+                            <h3>루트 순서</h3>
+                        </div>
+                    </div>
+
+                    <div class="route-day-tabs desktop-route-day-tabs" data-route-tabs="desktop">
+                        <button type="button" class="route-day-tab is-active" data-day="all">전체</button>
+                        {% for group in grouped_places %}
+                            <button type="button" class="route-day-tab" data-day="{{ group.day }}">DAY {{ group.day }}</button>
+                        {% endfor %}
+                    </div>
+
+                    <ol class="route-sequence route-sequence-grouped desktop-route-sequence">
+                        <li class="route-sequence-item is-start desktop-start-item js-route-start">
+                            <span class="route-seq-no start">S</span>
+                            <div>
+                                <strong>
+                                    {% if post.start_place_name %}
+                                        {{ post.start_place_name }} 출발
+                                    {% elif post.start_region or post.start_district %}
+                                        {{ post.start_region }} {{ post.start_district }} 출발
+                                    {% else %}
+                                        출발지 미정
+                                    {% endif %}
+                                </strong>
+
+                                {% if post.start_time %}
+                                    <small>{{ post.start_time }}</small>
+                                {% endif %}
+                            </div>
+                        </li>
+
+                        {% for group in grouped_places %}
+                            <li class="route-day-divider desktop-day-divider js-day-divider" data-day-section="{{ group.day }}">
+                                <span>{{ group.day }}일차</span>
+                                <em>사용돈 {{ group.daily_cost }}원</em>
+                            </li>
+
+                            {% for place in group.places %}
+                            <li
+                                class="route-sequence-item route-clickable-place desktop-place-row js-place-row"
+                                data-day="{{ group.day }}"
+                                data-place-id="{{ place.pk }}"
+                                data-target-card="desktop-place-{{ place.pk }}"
+                                role="button"
+                                tabindex="0"
+                                aria-label="{{ place.place_name }} 위치로 이동"
+                            >
+                                <span class="route-seq-no">{{ forloop.counter }}</span>
+                                <div>
+                                    <strong>{{ place.place_name }}</strong>
+                                    <small>
+                                        {% if place.visit_time_str %}{{ place.visit_time_str }}{% else %}시간 미정{% endif %}
+                                        {% if place.cost > 0 %} · {{ place.cost }}원{% endif %}
+                                    </small>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        {% endfor %}
+
+                        <li class="route-sequence-item is-end desktop-end-item js-route-end">
                             <span class="route-seq-no end">E</span>
                             <div>
                                 <strong>{{ post.destination }} 도착</strong>
@@ -410,9 +312,9 @@
             </section>
         </aside>
 
-        <main class="detail-content">
+        <main class="detail-content" id="desktopDetailContent">
             {% for group in grouped_places %}
-            <section class="day-group">
+            <section class="day-group desktop-day-section" id="desktop-day-{{ group.day }}" data-desktop-day-section="{{ group.day }}">
                 <div class="day-group-head compact-day-head">
                     <span class="day-badge">{{ group.day }}일차</span>
                     <span class="day-cost-badge">사용돈 {{ group.daily_cost }}원</span>
@@ -420,7 +322,12 @@
 
                 <div class="route-card-list">
                     {% for place in group.places %}
-                    <article class="route-card route-card-clean">
+                    <article
+                        id="desktop-place-{{ place.pk }}"
+                        class="route-card route-card-clean desktop-place-card"
+                        data-place-id="{{ place.pk }}"
+                        data-day="{{ group.day }}"
+                    >
                         <div class="route-card-media">
                             {% if place.image %}
                                 <img src="{{ place.image.url }}" alt="{{ place.place_name }}">
@@ -431,7 +338,7 @@
 
                         <div class="route-card-body">
                             <div class="route-card-topline">
-                                <span class="route-card-label">방문장소</span>
+                                <span class="route-card-label">{{ group.day }}일차 {{ forloop.counter }}번째 방문장소</span>
                                 <div class="route-card-facts">
                                     {% if place.visit_time_str %}
                                         <span>⏰ {{ place.visit_time_str }}</span>
@@ -457,8 +364,7 @@
         </main>
     </div>
 
-    <!-- PC / 태블릿 리뷰 -->
-    <section class="route-review-section desktop-review-section">
+    <section class="route-review-section unified-review-section">
         <div class="route-review-head">
             <div>
                 <p class="eyebrow">ROUTE REVIEW</p>
@@ -523,7 +429,7 @@
             {% else %}
                 <div class="route-review-login-box">
                     리뷰를 남기려면 로그인이 필요합니다.
-                    <a href="{% url 'accounts:login' %}?next={{ request.get_full_path }}">로그인하기</a>
+                    <a href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}">로그인하기</a>
                 </div>
             {% endif %}
         </div>
@@ -753,6 +659,361 @@
         font-size: 15px;
     }
 
+    .route-day-tabs {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin: 0 0 10px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        flex: 0 0 auto;
+    }
+
+    .route-day-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .route-day-tab {
+        min-width: 50px;
+        min-height: 34px;
+        padding: 0 12px;
+        border: 1px solid #dfe5f0;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #667085;
+        font-size: 12px;
+        font-weight: 950;
+        white-space: nowrap;
+        cursor: pointer;
+        transition:
+            background 0.15s ease,
+            color 0.15s ease,
+            border-color 0.15s ease,
+            box-shadow 0.15s ease,
+            transform 0.15s ease;
+    }
+
+    .route-day-tab:hover {
+        transform: translateY(-1px);
+        border-color: #cfd9ff;
+        color: #3157f6;
+        box-shadow: 0 8px 18px rgba(49, 87, 246, 0.10);
+    }
+
+    .route-day-tab.is-active {
+        background: #3157f6;
+        color: #ffffff;
+        border-color: #3157f6;
+        box-shadow: 0 10px 20px rgba(49, 87, 246, 0.20);
+    }
+
+    .route-sequence,
+    .route-sequence-grouped {
+        list-style: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-auto-rows: min-content !important;
+        gap: 6px !important;
+        align-content: start !important;
+        justify-content: stretch !important;
+        justify-items: stretch !important;
+        place-content: start stretch !important;
+        min-height: 0 !important;
+        height: auto !important;
+    }
+
+    .route-sequence-item {
+        min-height: 42px !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 3px 4px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 10px !important;
+        box-sizing: border-box !important;
+        flex: 0 0 auto !important;
+        align-self: start !important;
+    }
+
+    .route-sequence-item > div {
+        min-width: 0 !important;
+    }
+
+    .route-sequence-item > div strong {
+        display: block !important;
+        color: #111827;
+        font-size: 13px !important;
+        font-weight: 950 !important;
+        line-height: 1.22 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .route-sequence-item > div small {
+        display: block !important;
+        margin-top: 2px !important;
+        color: #7d8aa2;
+        font-size: 11.5px !important;
+        font-weight: 800 !important;
+        line-height: 1.15 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .route-seq-no {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        flex: 0 0 34px !important;
+        border-radius: 999px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 13px !important;
+        font-weight: 950 !important;
+    }
+
+    .route-day-divider {
+        height: 32px !important;
+        min-height: 32px !important;
+        max-height: 32px !important;
+        padding: 0 11px !important;
+        margin: 5px 0 6px !important;
+        border-radius: 13px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 10px !important;
+        box-sizing: border-box !important;
+        flex: 0 0 auto !important;
+        align-self: stretch !important;
+    }
+
+    .route-day-divider span,
+    .route-day-divider em {
+        line-height: 1 !important;
+        font-size: 12px !important;
+        font-weight: 950 !important;
+        white-space: nowrap !important;
+    }
+
+    .route-clickable-place {
+        cursor: pointer;
+        border-radius: 15px;
+        transition:
+            background 0.15s ease,
+            transform 0.15s ease,
+            box-shadow 0.15s ease;
+    }
+
+    .route-clickable-place:hover,
+    .route-clickable-place.is-active {
+        background: #f2f5ff;
+        transform: translateY(-1px);
+    }
+
+    .route-clickable-place.is-active {
+        outline: 2px solid #111827;
+        outline-offset: 1px;
+    }
+
+    .route-clickable-place.is-active .route-seq-no {
+        background: #111827;
+        box-shadow: 0 10px 22px rgba(17, 24, 39, 0.20);
+    }
+
+    .desktop-place-card {
+        scroll-margin-top: 110px;
+        transition:
+            border-color 0.18s ease,
+            box-shadow 0.18s ease,
+            transform 0.18s ease;
+    }
+
+    .desktop-place-card.is-focused {
+        border-color: #3157f6;
+        box-shadow: 0 24px 54px rgba(49, 87, 246, 0.18);
+        transform: translateY(-2px);
+    }
+
+    .mobile-route-explorer {
+        display: none;
+    }
+
+    .mobile-route-shell-card {
+        width: 100%;
+        padding: 18px;
+        border-radius: 24px;
+        background: #ffffff;
+        border: 1px solid #e5eaf3;
+        box-shadow: 0 16px 36px rgba(17, 24, 39, 0.08);
+        box-sizing: border-box;
+    }
+
+    .mobile-detail-map {
+        height: 250px;
+        border-radius: 18px;
+    }
+
+    #course-map {
+        position: relative;
+        width: 100%;
+        cursor: grab;
+        touch-action: auto !important;
+        -ms-touch-action: auto !important;
+        overscroll-behavior: auto !important;
+        -webkit-user-select: none;
+        user-select: none;
+        pointer-events: auto !important;
+        overflow: hidden;
+    }
+
+    #mobile-course-map {
+        position: relative;
+        width: 100%;
+        cursor: grab;
+        touch-action: none !important;
+        -ms-touch-action: none !important;
+        overscroll-behavior: contain !important;
+        -webkit-user-select: none;
+        user-select: none;
+        pointer-events: auto !important;
+        overflow: hidden;
+    }
+
+    #course-map:active,
+    #course-map.is-map-dragging,
+    #mobile-course-map:active,
+    #mobile-course-map.is-map-dragging,
+    #mobile-course-map.is-map-touching {
+        cursor: grabbing;
+    }
+
+    #course-map *,
+    #mobile-course-map * {
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    #course-map .pr-map-overlay-wrap,
+    #course-map .pr-map-overlay-wrap *,
+    #mobile-course-map .pr-map-overlay-wrap,
+    #mobile-course-map .pr-map-overlay-wrap *,
+    .pr-map-overlay-wrap,
+    .pr-map-overlay-wrap * {
+        pointer-events: none !important;
+    }
+
+    .pr-map-overlay-wrap {
+        display: block;
+        width: max-content;
+        height: max-content;
+        pointer-events: none !important;
+    }
+
+    .pr-map-label {
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        background: #3157f6;
+        border: 3px solid #ffffff;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.22);
+        color: #ffffff;
+        font-size: 13px;
+        font-weight: 950;
+        line-height: 28px;
+        text-align: center;
+        white-space: nowrap;
+        pointer-events: none !important;
+        transform: translateZ(0);
+    }
+
+    .pr-map-label.start {
+        background: #111827;
+    }
+
+    .pr-map-label.selected {
+        width: 40px;
+        height: 40px;
+        background: #f04452;
+        border-color: #ffffff;
+        color: #ffffff;
+        font-size: 15px;
+        line-height: 34px;
+        box-shadow:
+            0 0 0 5px rgba(240, 68, 82, 0.22),
+            0 14px 28px rgba(15, 23, 42, 0.28);
+    }
+
+    .mobile-flow-box {
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid #eef1f6;
+        touch-action: pan-y;
+    }
+
+    .mobile-route-sequence {
+        max-height: 330px;
+        overflow-y: auto;
+        padding-right: 4px;
+        touch-action: pan-y;
+    }
+
+    .mobile-place-detail-view {
+        display: grid;
+        gap: 12px;
+    }
+
+    .mobile-place-detail-view[hidden] {
+        display: none !important;
+    }
+
+    .mobile-detail-back-btn {
+        width: 100%;
+        min-height: 42px;
+        border: 1px solid #d9e1ff;
+        border-radius: 14px;
+        background: #f5f7ff;
+        color: #3157f6;
+        font-size: 13px;
+        font-weight: 950;
+        cursor: pointer;
+    }
+
+    .mobile-place-detail-card {
+        border-radius: 22px;
+        overflow: hidden;
+        border: 1px solid #e5eaf3;
+        background: #ffffff;
+        box-shadow: 0 14px 32px rgba(17, 24, 39, 0.07);
+    }
+
+    .mobile-place-detail-card[hidden] {
+        display: none !important;
+    }
+
+    .mobile-place-detail-media {
+        height: 220px;
+        min-height: 220px;
+    }
+
+    .mobile-place-detail-media img {
+        width: 100%;
+        height: 100%;
+        min-height: 220px;
+        object-fit: cover;
+    }
+
+    .mobile-place-detail-body {
+        min-height: auto;
+        padding: 21px;
+    }
+
     .route-review-section {
         margin-top: 34px;
         padding: 30px;
@@ -977,13 +1238,116 @@
         text-align: center;
     }
 
-    .mobile-route-slider-shell {
-        display: none;
+    @media (min-width: 769px) {
+        .desktop-detail-layout {
+            align-items: stretch;
+            min-height: calc(100vh - 130px);
+        }
+
+        .desktop-detail-layout .route-sticky-panel {
+            position: sticky;
+            top: 94px;
+            height: calc(100vh - 112px);
+            max-height: calc(100vh - 112px);
+            align-self: start;
+            min-height: 0;
+        }
+
+        .desktop-detail-layout .route-map-flow-card {
+            height: 100%;
+            max-height: 100%;
+            min-height: 0;
+            overflow: hidden;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            justify-content: flex-start !important;
+            gap: 14px;
+        }
+
+        .desktop-detail-layout .route-map-area {
+            flex: 0 0 auto !important;
+            min-width: 0;
+            min-height: 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .desktop-detail-map {
+            height: clamp(260px, 38vh, 360px) !important;
+            min-height: 260px !important;
+            width: 100% !important;
+            border-radius: 18px;
+        }
+
+        .desktop-detail-layout .route-flow-area {
+            flex: 0 1 auto !important;
+            min-height: 0;
+            overflow: hidden;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            align-content: stretch !important;
+            position: relative;
+            z-index: 1;
+        }
+
+        .desktop-detail-layout .flow-head,
+        .desktop-detail-layout .desktop-route-day-tabs {
+            flex: 0 0 auto !important;
+        }
+
+        .desktop-route-sequence {
+            flex: 0 1 auto !important;
+            min-height: 0 !important;
+            height: auto !important;
+            max-height: clamp(210px, 30vh, 320px) !important;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 5px !important;
+            align-content: start !important;
+            justify-content: stretch !important;
+            place-content: start stretch !important;
+        }
+
+        .desktop-route-sequence::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .desktop-route-sequence::-webkit-scrollbar-thumb {
+            background: #c8d0df;
+            border-radius: 999px;
+        }
+
+        .desktop-route-sequence::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #desktopDetailContent {
+            max-height: calc(100vh - 112px);
+            overflow-y: auto;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            padding-right: 8px;
+        }
+
+        #desktopDetailContent::-webkit-scrollbar {
+            width: 7px;
+        }
+
+        #desktopDetailContent::-webkit-scrollbar-thumb {
+            background: #c8d0df;
+            border-radius: 999px;
+        }
+
+        #desktopDetailContent::-webkit-scrollbar-track {
+            background: transparent;
+        }
     }
 
     @media (max-width: 768px) {
         .course-detail-shell {
-            padding: 18px 0 18px;
+            padding: 18px 0 40px;
             overflow-x: hidden;
         }
 
@@ -1005,203 +1369,70 @@
             display: none !important;
         }
 
-        .desktop-detail-layout,
-        .desktop-review-section {
+        .desktop-detail-layout {
             display: none !important;
         }
 
-        .mobile-route-slider-shell {
+        .mobile-route-explorer {
             display: block;
-            margin-top: 14px;
-            margin-bottom: 0;
             width: 100%;
-            overflow: hidden;
-        }
-
-        .mobile-slide-hint {
-            width: calc(100% - 32px);
-            margin: 0 auto 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            color: #7f8a9c;
-            font-size: 12px;
-            font-weight: 850;
-        }
-
-        .mobile-slide-hint b {
-            color: #3157f6;
-            font-size: 11px;
-            letter-spacing: 0.06em;
-        }
-
-        .mobile-route-slider {
-            width: 100%;
-            display: flex;
-            align-items: flex-start;
-            gap: 0;
-            overflow-x: auto;
-            overflow-y: hidden;
-            scroll-snap-type: x mandatory;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: auto;
-            overscroll-behavior-x: contain;
-            padding: 0 0 8px;
-            box-sizing: border-box;
-            scrollbar-width: none;
-            touch-action: pan-y;
-            transition: height 0.18s ease;
-        }
-
-        .mobile-route-slider::-webkit-scrollbar {
-            display: none;
-        }
-
-        .mobile-route-slide {
-            flex: 0 0 100%;
-            width: 100%;
-            max-width: 100%;
-            min-width: 0;
-            box-sizing: border-box;
-            scroll-snap-align: start;
-            scroll-snap-stop: always;
             padding: 0 16px;
-        }
-
-        .mobile-slide-card {
-            width: 100%;
-            min-height: 0;
-            padding: 18px;
-            border-radius: 24px;
-            background: #ffffff;
-            border: 1px solid #e5eaf3;
-            box-shadow: 0 16px 36px rgba(17, 24, 39, 0.08);
+            margin-top: 14px;
             box-sizing: border-box;
         }
 
-        .mobile-map-slide-card {
-            min-height: 0;
+        .route-day-tabs.mobile-route-day-tabs {
+            padding-bottom: 2px;
         }
 
-        .mobile-detail-map {
-            height: 250px;
-            border-radius: 18px;
-        }
-
-        .mobile-flow-box {
-            margin-top: 14px;
-            padding-top: 14px;
-            border-top: 1px solid #eef1f6;
+        .route-day-tab {
+            min-width: 52px;
+            min-height: 34px;
+            padding: 0 11px;
+            font-size: 12px;
         }
 
         .mobile-route-sequence {
             max-height: 300px;
-            overflow-y: auto;
-            padding-right: 4px;
         }
 
-        .mobile-day-slide-head {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 14px;
-            flex-wrap: wrap;
+        .route-review-section {
+            width: calc(100% - 32px);
+            margin: 28px auto 0;
+            padding: 22px 18px;
+            border-radius: 24px;
         }
 
-        .mobile-route-card-list {
-            gap: 14px;
-        }
-
-        .mobile-route-card {
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-            border-radius: 22px;
-        }
-
-        .mobile-route-card .route-card-media {
-            height: 220px;
-            min-height: 220px;
-            max-height: 220px;
-        }
-
-        .mobile-route-card .route-card-media img {
-            height: 100%;
-            min-height: 220px;
-        }
-
-        .mobile-route-card .route-card-noimg {
-            min-height: 220px;
-        }
-
-        .mobile-route-card .route-card-body {
-            min-height: auto;
-            padding: 21px;
-        }
-
-        .mobile-route-card .route-card-topline {
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .mobile-route-card .route-card-facts {
-            justify-content: flex-start;
-        }
-
-        .mobile-route-card .route-card-title {
-            font-size: 21px;
-        }
-
-        .mobile-review-slide-card {
-            min-height: 0;
-        }
-
-        .mobile-review-slide-card .route-review-head {
+        .route-review-head {
             flex-direction: column;
             align-items: stretch;
         }
 
-        .mobile-review-slide-card .route-review-score-card {
+        .route-review-score-card {
             justify-content: center;
         }
 
-        .mobile-review-slide-card .route-review-card-top {
+        .route-review-card-top {
             flex-direction: column;
             align-items: flex-start;
         }
 
-        .mobile-review-slide-card .route-review-card-score {
+        .route-review-card-score {
             justify-content: flex-start !important;
             min-width: 0;
         }
 
-        .mobile-review-slide-card .review-star-input {
+        .review-star-input {
             justify-content: center;
             width: 100%;
         }
+    }
 
-        .mobile-slide-dots {
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-            margin-top: 18px;
-            margin-bottom: 8px;
-        }
-
-        .mobile-slide-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 999px;
-            border: 0;
-            background: #cbd5e1;
-            padding: 0;
-            cursor: pointer;
-        }
-
-        .mobile-slide-dot.is-active {
-            width: 20px;
-            background: #3157f6;
-        }
+    .is-filter-hidden,
+    .route-day-divider.is-filter-hidden,
+    .route-sequence-item.is-filter-hidden,
+    .desktop-day-section.is-filter-hidden {
+        display: none !important;
     }
 </style>
 
@@ -1227,325 +1458,761 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    const slider = document.getElementById("mobileRouteSlider");
-    const dotsBox = document.getElementById("mobileSlideDots");
+    const startPoint = {
+        exists: {% if post.start_latitude and post.start_longitude %}true{% else %}false{% endif %},
+        title: "{% if post.start_place_name %}{{ post.start_place_name|escapejs }}{% elif post.start_region or post.start_district %}{{ post.start_region|escapejs }} {{ post.start_district|escapejs }}{% else %}출발지{% endif %} 출발",
+        lat: {% if post.start_latitude %}{{ post.start_latitude }}{% else %}null{% endif %},
+        lng: {% if post.start_longitude %}{{ post.start_longitude }}{% else %}null{% endif %}
+    };
 
-    if (slider && dotsBox) {
-        const slides = Array.from(slider.querySelectorAll(".mobile-route-slide"));
-        let currentIndex = 0;
-        let startX = 0;
-        let startY = 0;
-        let isTouching = false;
-        let isHorizontalSwipe = false;
+    const routeGroups = [
+        {% for group in grouped_places %}
+        {
+            day: "{{ group.day }}",
+            dailyCost: "{{ group.daily_cost }}",
+            places: [
+                {% for place in group.places %}
+                {
+                    id: "{{ place.pk }}",
+                    day: "{{ group.day }}",
+                    localIndex: {{ forloop.counter }},
+                    name: "{{ place.place_name|escapejs }}",
+                    visitTime: "{% if place.visit_time_str %}{{ place.visit_time_str|escapejs }}{% else %}시간 미정{% endif %}",
+                    cost: {{ place.cost|default:0 }},
+                    lat: {% if place.latitude %}{{ place.latitude }}{% else %}null{% endif %},
+                    lng: {% if place.longitude %}{{ place.longitude }}{% else %}null{% endif %}
+                }{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ]
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
 
-        dotsBox.innerHTML = "";
+    const flatPlaces = routeGroups.reduce(function (result, group) {
+        group.places.forEach(function (place) {
+            result.push(place);
+        });
+        return result;
+    }, []);
 
-        function getSlideLeft(index) {
-            const target = slides[index];
+    let activeDay = "all";
+    let activePlaceId = null;
+    let resizeTimer = null;
 
-            if (!target) {
-                return 0;
-            }
+    const mapState = {
+        desktop: null,
+        mobile: null
+    };
 
-            return target.offsetLeft - slider.offsetLeft;
+    function isMobileViewport() {
+        return window.matchMedia("(max-width: 768px)").matches;
+    }
+
+    function getActiveMapKey() {
+        return isMobileViewport() ? "mobile" : "desktop";
+    }
+
+    function getMapTargetIdByKey(key) {
+        return key === "mobile" ? "mobile-course-map" : "course-map";
+    }
+
+    function getPlacesByDay(day) {
+        if (String(day) === "all") {
+            return flatPlaces;
         }
 
-        function getClosestIndex() {
-            if (!slides.length) {
-                return 0;
-            }
+        return flatPlaces.filter(function (place) {
+            return String(place.day) === String(day);
+        });
+    }
 
-            let closestIndex = 0;
-            let closestDistance = Infinity;
+    function getDayTitle(day) {
+        if (String(day) === "all") {
+            return "전체 루트 지도";
+        }
 
-            slides.forEach(function (slide, index) {
-                const distance = Math.abs(slider.scrollLeft - getSlideLeft(index));
+        return `${day}일차 루트 지도`;
+    }
 
-                if (distance < closestDistance) {
-                    closestDistance = distance;
-                    closestIndex = index;
-                }
+    function getMapItems(day, selectedPlaceId) {
+        const items = [];
+
+        if (
+            String(day) === "all" &&
+            startPoint.exists &&
+            startPoint.lat !== null &&
+            startPoint.lng !== null
+        ) {
+            items.push({
+                id: "start",
+                title: startPoint.title,
+                lat: startPoint.lat,
+                lng: startPoint.lng,
+                label: "S",
+                type: "start",
+                selected: selectedPlaceId === "start"
             });
-
-            return closestIndex;
         }
 
-        function updateDots(index) {
-            const dots = Array.from(dotsBox.querySelectorAll(".mobile-slide-dot"));
-
-            dots.forEach(function (dot, dotIndex) {
-                dot.classList.toggle("is-active", dotIndex === index);
-            });
-        }
-
-        function updateSliderHeight(index) {
-            if (!slides.length) {
-                return;
-            }
-
-            const safeIndex = Math.max(0, Math.min(index, slides.length - 1));
-            const activeSlide = slides[safeIndex];
-            const activeCard = activeSlide ? activeSlide.querySelector(".mobile-slide-card") : null;
-
-            if (!activeCard) {
-                slider.style.height = "auto";
-                return;
-            }
-
-            const cardHeight = Math.ceil(activeCard.getBoundingClientRect().height);
-            slider.style.height = `${cardHeight + 8}px`;
-        }
-
-        function goToSlide(index, smooth) {
-            if (!slides.length) {
-                return;
-            }
-
-            const safeIndex = Math.max(0, Math.min(index, slides.length - 1));
-            currentIndex = safeIndex;
-
-            slider.scrollTo({
-                left: getSlideLeft(safeIndex),
-                behavior: smooth === false ? "auto" : "smooth"
-            });
-
-            updateDots(safeIndex);
-            updateSliderHeight(safeIndex);
-
-            setTimeout(function () {
-                updateSliderHeight(safeIndex);
-            }, 240);
-        }
-
-        slides.forEach(function (_, index) {
-            const dot = document.createElement("button");
-            dot.type = "button";
-            dot.className = "mobile-slide-dot";
-
-            if (index === 0) {
-                dot.classList.add("is-active");
-            }
-
-            dot.addEventListener("click", function () {
-                goToSlide(index, true);
-            });
-
-            dotsBox.appendChild(dot);
+        const places = getPlacesByDay(day).filter(function (place) {
+            return place.lat !== null && place.lng !== null;
         });
 
-        slider.addEventListener("touchstart", function (event) {
-            if (!event.touches || !event.touches.length) {
-                return;
-            }
+        places.forEach(function (place, index) {
+            items.push({
+                id: place.id,
+                title: place.name,
+                lat: place.lat,
+                lng: place.lng,
+                label: String(index + 1),
+                type: "place",
+                selected: selectedPlaceId && String(selectedPlaceId) === String(place.id)
+            });
+        });
 
-            isTouching = true;
-            isHorizontalSwipe = false;
-            startX = event.touches[0].clientX;
-            startY = event.touches[0].clientY;
-            currentIndex = getClosestIndex();
+        return items;
+    }
+
+    function isMapBoxRenderable(mapBox) {
+        if (!mapBox) {
+            return false;
+        }
+
+        const rect = mapBox.getBoundingClientRect();
+        const style = window.getComputedStyle(mapBox);
+
+        return (
+            rect.width > 20 &&
+            rect.height > 20 &&
+            style.display !== "none" &&
+            style.visibility !== "hidden"
+        );
+    }
+
+    function clearMapState(state) {
+        if (!state) {
+            return;
+        }
+
+        if (state.overlays) {
+            state.overlays.forEach(function (overlay) {
+                overlay.setMap(null);
+            });
+        }
+
+        if (state.polyline) {
+            state.polyline.setMap(null);
+        }
+    }
+
+    function attachMobileMapTouchGuard(mapBox) {
+        if (!mapBox || mapBox.dataset.touchGuardReady === "1") {
+            return;
+        }
+
+        mapBox.dataset.touchGuardReady = "1";
+
+        mapBox.addEventListener("touchstart", function () {
+            mapBox.classList.add("is-map-touching");
         }, { passive: true });
 
-        slider.addEventListener("touchmove", function (event) {
-            if (!isTouching || !event.touches || !event.touches.length) {
-                return;
-            }
-
-            const moveX = event.touches[0].clientX;
-            const moveY = event.touches[0].clientY;
-            const diffX = startX - moveX;
-            const diffY = startY - moveY;
-
-            if (!isHorizontalSwipe && Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 8) {
-                isHorizontalSwipe = true;
-            }
-
-            if (isHorizontalSwipe) {
+        mapBox.addEventListener("touchmove", function (event) {
+            if (event.touches && event.touches.length > 0) {
                 event.preventDefault();
             }
         }, { passive: false });
 
-        slider.addEventListener("touchend", function (event) {
-            if (!isTouching) {
-                return;
-            }
-
-            isTouching = false;
-
-            if (!event.changedTouches || !event.changedTouches.length) {
-                goToSlide(currentIndex, true);
-                return;
-            }
-
-            const endX = event.changedTouches[0].clientX;
-            const diffX = startX - endX;
-            const threshold = 45;
-
-            if (Math.abs(diffX) < threshold) {
-                goToSlide(currentIndex, true);
-                return;
-            }
-
-            if (diffX > 0) {
-                goToSlide(currentIndex + 1, true);
-            } else {
-                goToSlide(currentIndex - 1, true);
-            }
+        mapBox.addEventListener("touchend", function () {
+            mapBox.classList.remove("is-map-touching");
         }, { passive: true });
 
-        slider.addEventListener("scroll", function () {
-            window.requestAnimationFrame(function () {
-                if (isTouching) {
-                    return;
-                }
-
-                const index = getClosestIndex();
-
-                if (index !== currentIndex) {
-                    currentIndex = index;
-                    updateDots(currentIndex);
-                    updateSliderHeight(currentIndex);
-                }
-            });
-        });
-
-        window.addEventListener("resize", function () {
-            goToSlide(currentIndex, false);
-        });
-
-        const sliderImages = slider.querySelectorAll("img");
-
-        sliderImages.forEach(function (image) {
-            image.addEventListener("load", function () {
-                updateSliderHeight(currentIndex);
-            });
-        });
-
-        goToSlide(0, false);
-
-        setTimeout(function () {
-            updateSliderHeight(currentIndex);
-        }, 300);
+        mapBox.addEventListener("touchcancel", function () {
+            mapBox.classList.remove("is-map-touching");
+        }, { passive: true });
     }
 
-    let mapData = [];
-
-    {% if post.start_latitude and post.start_longitude %}
-        mapData.push({
-            title: "{% if post.start_place_name %}{{ post.start_place_name|escapejs }}{% elif post.start_region or post.start_district %}{{ post.start_region|escapejs }} {{ post.start_district|escapejs }}{% else %}출발지{% endif %} 출발",
-            lat: {{ post.start_latitude }},
-            lng: {{ post.start_longitude }},
-            markerLabel: "S",
-            markerType: "start"
-        });
-    {% endif %}
-
-    {% for place in ordered_places %}
-        {% if place.latitude and place.longitude %}
-            mapData.push({
-                title: "{{ place.place_name|escapejs }}",
-                lat: {{ place.latitude }},
-                lng: {{ place.longitude }},
-                markerLabel: "{{ forloop.counter }}",
-                markerType: "place"
-            });
-        {% endif %}
-    {% endfor %}
-
-    function renderCourseMap(mapBox) {
-        if (!mapBox) {
+    function enableMapDragging(map, mapBox, key) {
+        if (!map) {
             return;
         }
 
-        if (typeof kakao === 'undefined' || !kakao.maps) {
+        map.setZoomable(true);
+
+        if (key === "desktop") {
+            map.setDraggable(false);
+        } else {
+            map.setDraggable(true);
+        }
+
+        if (mapBox) {
+            mapBox.style.pointerEvents = "auto";
+            mapBox.style.cursor = "grab";
+
+            if (key === "mobile") {
+                mapBox.style.touchAction = "none";
+                mapBox.style.msTouchAction = "none";
+                mapBox.style.overscrollBehavior = "contain";
+            } else {
+                mapBox.style.touchAction = "auto";
+                mapBox.style.msTouchAction = "auto";
+                mapBox.style.overscrollBehavior = "auto";
+            }
+        }
+    }
+
+    function attachDesktopMouseDragFallback(map, mapBox) {
+        if (!map || !mapBox) {
+            return;
+        }
+
+        mapBox.__poinrouteCurrentDesktopMap = map;
+
+        if (mapBox.dataset.desktopMouseDragReady === "1") {
+            return;
+        }
+
+        mapBox.dataset.desktopMouseDragReady = "1";
+
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+        let startCenter = null;
+        let hasMoved = false;
+
+        function getCurrentMap() {
+            return mapBox.__poinrouteCurrentDesktopMap || null;
+        }
+
+        function stopDragging() {
+            if (!isDragging) {
+                return;
+            }
+
+            isDragging = false;
+            startCenter = null;
+
+            mapBox.classList.remove("is-map-dragging");
+            mapBox.style.cursor = "grab";
+
+            document.removeEventListener("mousemove", onMouseMove);
+            document.removeEventListener("mouseup", stopDragging);
+
+            if (hasMoved) {
+                mapBox.__poinrouteSuppressNextClick = true;
+
+                window.setTimeout(function () {
+                    mapBox.__poinrouteSuppressNextClick = false;
+                }, 0);
+            }
+        }
+
+        function onMouseMove(event) {
+            const currentMap = getCurrentMap();
+
+            if (!isDragging || !startCenter || !currentMap) {
+                return;
+            }
+
+            const deltaX = event.clientX - startX;
+            const deltaY = event.clientY - startY;
+
+            if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
+                hasMoved = true;
+            }
+
+            event.preventDefault();
+
+            const projection = currentMap.getProjection();
+
+            if (!projection) {
+                return;
+            }
+
+            const centerPoint = projection.containerPointFromCoords(startCenter);
+
+            if (!centerPoint) {
+                return;
+            }
+
+            const nextPoint = new kakao.maps.Point(
+                centerPoint.x - deltaX,
+                centerPoint.y - deltaY
+            );
+
+            const nextCenter = projection.coordsFromContainerPoint(nextPoint);
+
+            if (nextCenter) {
+                currentMap.setCenter(nextCenter);
+            }
+        }
+
+        mapBox.addEventListener("mousedown", function (event) {
+            const currentMap = getCurrentMap();
+
+            if (!currentMap || event.button !== 0) {
+                return;
+            }
+
+            event.preventDefault();
+
+            isDragging = true;
+            hasMoved = false;
+            startX = event.clientX;
+            startY = event.clientY;
+            startCenter = currentMap.getCenter();
+
+            mapBox.classList.add("is-map-dragging");
+            mapBox.style.cursor = "grabbing";
+
+            document.removeEventListener("mousemove", onMouseMove);
+            document.removeEventListener("mouseup", stopDragging);
+
+            document.addEventListener("mousemove", onMouseMove);
+            document.addEventListener("mouseup", stopDragging);
+        });
+
+        mapBox.addEventListener("click", function (event) {
+            if (mapBox.__poinrouteSuppressNextClick) {
+                event.preventDefault();
+                event.stopPropagation();
+                mapBox.__poinrouteSuppressNextClick = false;
+            }
+        }, true);
+
+        mapBox.addEventListener("dragstart", function (event) {
+            event.preventDefault();
+        });
+    }
+
+    function fitMapToItems(map, bounds, items, selectedPlaceId) {
+        if (!map || !bounds || !items.length) {
+            return;
+        }
+
+        const selected = selectedPlaceId
+            ? items.find(function (item) {
+                return String(item.id) === String(selectedPlaceId);
+            })
+            : null;
+
+        if (selected) {
+            const selectedPosition = new kakao.maps.LatLng(selected.lat, selected.lng);
+            map.setCenter(selectedPosition);
+            map.setLevel(6);
+            return;
+        }
+
+        if (items.length === 1) {
+            map.setCenter(new kakao.maps.LatLng(items[0].lat, items[0].lng));
+            map.setLevel(6);
+            return;
+        }
+
+        map.setBounds(bounds);
+    }
+
+    function renderRouteMap(targetId, day, selectedPlaceId) {
+        const mapBox = document.getElementById(targetId);
+
+        if (!mapBox || !isMapBoxRenderable(mapBox)) {
+            return;
+        }
+
+        if (typeof kakao === "undefined" || !kakao.maps) {
             mapBox.innerHTML = '<div class="map-empty-state">카카오맵을 불러오지 못했습니다.</div>';
             return;
         }
 
-        if (mapData.length === 0) {
+        const items = getMapItems(day, selectedPlaceId);
+
+        if (!items.length) {
             mapBox.innerHTML = '<div class="map-empty-state">등록된 좌표가 없습니다.</div>';
             return;
         }
 
-        try {
-            mapBox.innerHTML = '';
+        const key = targetId === "mobile-course-map" ? "mobile" : "desktop";
 
-            const map = new kakao.maps.Map(mapBox, {
-                center: new kakao.maps.LatLng(mapData[0].lat, mapData[0].lng),
-                level: 7
+        clearMapState(mapState[key]);
+        mapState[key] = null;
+
+        mapBox.innerHTML = "";
+
+        const map = new kakao.maps.Map(mapBox, {
+            center: new kakao.maps.LatLng(items[0].lat, items[0].lng),
+            level: selectedPlaceId ? 6 : 7,
+            draggable: key === "mobile",
+            scrollwheel: true,
+            disableDoubleClickZoom: false
+        });
+
+        enableMapDragging(map, mapBox, key);
+
+        if (key === "mobile") {
+            attachMobileMapTouchGuard(mapBox);
+        }
+
+        if (key === "desktop") {
+            attachDesktopMouseDragFallback(map, mapBox);
+        }
+
+        const bounds = new kakao.maps.LatLngBounds();
+        const linePath = [];
+        const overlays = [];
+
+        items.forEach(function (item) {
+            const position = new kakao.maps.LatLng(item.lat, item.lng);
+            bounds.extend(position);
+            linePath.push(position);
+        });
+
+        let polyline = null;
+
+        if (linePath.length > 1) {
+            polyline = new kakao.maps.Polyline({
+                path: linePath,
+                strokeWeight: 4,
+                strokeColor: "#3157f6",
+                strokeOpacity: 0.85,
+                strokeStyle: "solid"
             });
 
-            const bounds = new kakao.maps.LatLngBounds();
-            const linePath = [];
+            polyline.setMap(map);
+        }
 
-            mapData.forEach(function (item) {
-                const position = new kakao.maps.LatLng(item.lat, item.lng);
+        const normalItems = items.filter(function (item) {
+            return !item.selected;
+        });
 
-                const marker = new kakao.maps.Marker({
-                    position: position,
-                    title: item.title
-                });
+        const selectedItems = items.filter(function (item) {
+            return item.selected;
+        });
 
-                marker.setMap(map);
+        normalItems.concat(selectedItems).forEach(function (item, index) {
+            const position = new kakao.maps.LatLng(item.lat, item.lng);
 
-                const labelPrefix = item.markerLabel || '';
-                const label = `
-                    <div style="padding:6px 10px;font-size:12px;font-weight:800;text-align:center;white-space:nowrap;">
-                        ${labelPrefix}. ${item.title}
+            const labelClass = [
+                "pr-map-label",
+                item.type === "start" ? "start" : "",
+                item.selected ? "selected" : ""
+            ].filter(Boolean).join(" ");
+
+            const overlay = new kakao.maps.CustomOverlay({
+                position: position,
+                yAnchor: 0.55,
+                zIndex: item.selected ? 10000 : 1000 + index,
+                clickable: false,
+                content: `
+                    <div class="pr-map-overlay-wrap" style="pointer-events:none;">
+                        <div class="${labelClass}" style="pointer-events:none;">${item.label}</div>
                     </div>
-                `;
-
-                const infowindow = new kakao.maps.InfoWindow({
-                    content: label
-                });
-
-                infowindow.open(map, marker);
-
-                bounds.extend(position);
-                linePath.push(position);
+                `
             });
 
-            if (linePath.length > 1) {
-                const polyline = new kakao.maps.Polyline({
-                    path: linePath,
-                    strokeWeight: 4,
-                    strokeColor: '#3157f6',
-                    strokeOpacity: 0.85,
-                    strokeStyle: 'solid'
-                });
+            overlay.setMap(map);
+            overlays.push(overlay);
+        });
 
-                polyline.setMap(map);
+        map.relayout();
+        fitMapToItems(map, bounds, items, selectedPlaceId);
+        enableMapDragging(map, mapBox, key);
+
+        if (key === "desktop") {
+            attachDesktopMouseDragFallback(map, mapBox);
+        }
+
+        mapState[key] = {
+            map: map,
+            overlays: overlays,
+            polyline: polyline,
+            bounds: bounds,
+            day: String(day),
+            selectedPlaceId: selectedPlaceId ? String(selectedPlaceId) : null
+        };
+
+        window.requestAnimationFrame(function () {
+            if (!mapState[key] || mapState[key].map !== map) {
+                return;
             }
 
-            map.setBounds(bounds);
+            const center = map.getCenter();
+            const level = map.getLevel();
 
-            setTimeout(function () {
-                map.relayout();
-                map.setBounds(bounds);
+            map.relayout();
+            map.setLevel(level);
+            map.setCenter(center);
+            enableMapDragging(map, mapBox, key);
 
-                if (slider && typeof currentIndex !== "undefined") {
-                    const activeIndex = Math.max(0, Math.round(slider.scrollLeft / Math.max(slider.clientWidth, 1)));
-                }
-            }, 250);
+            if (key === "desktop") {
+                attachDesktopMouseDragFallback(map, mapBox);
+            }
+        });
+    }
 
-        } catch (e) {
-            mapBox.innerHTML = '<div class="map-empty-state">지도 표시 중 오류가 발생했습니다.</div>';
-            console.log(e);
+    function renderAllMaps(day, selectedPlaceId) {
+        const desktopMapTitle = document.getElementById("desktopMapTitle");
+        const mobileMapTitle = document.getElementById("mobileMapTitle");
+
+        if (desktopMapTitle) {
+            desktopMapTitle.textContent = getDayTitle(day);
+        }
+
+        if (mobileMapTitle) {
+            mobileMapTitle.textContent = getDayTitle(day);
+        }
+
+        const activeKey = getActiveMapKey();
+        const targetId = getMapTargetIdByKey(activeKey);
+
+        renderRouteMap(targetId, day, selectedPlaceId);
+    }
+
+    function relayoutExistingMaps() {
+        const activeKey = getActiveMapKey();
+        const state = mapState[activeKey];
+        const mapBox = document.getElementById(getMapTargetIdByKey(activeKey));
+
+        if (state && state.map && isMapBoxRenderable(mapBox)) {
+            const center = state.map.getCenter();
+            const level = state.map.getLevel();
+
+            state.map.relayout();
+            state.map.setLevel(level);
+            state.map.setCenter(center);
+            enableMapDragging(state.map, mapBox, activeKey);
+
+            if (activeKey === "desktop") {
+                attachDesktopMouseDragFallback(state.map, mapBox);
+            }
+
+            return;
+        }
+
+        renderAllMaps(activeDay, activePlaceId);
+    }
+
+    function setActiveTabs(day) {
+        document.querySelectorAll(".route-day-tab").forEach(function (button) {
+            button.classList.toggle("is-active", String(button.dataset.day) === String(day));
+        });
+    }
+
+    function filterRouteFlowRows(day) {
+        const isAll = String(day) === "all";
+
+        document.querySelectorAll(".js-route-start, .js-route-end").forEach(function (item) {
+            item.classList.toggle("is-filter-hidden", !isAll);
+        });
+
+        document.querySelectorAll(".js-day-divider").forEach(function (item) {
+            const shouldShow = isAll || String(item.dataset.daySection) === String(day);
+            item.classList.toggle("is-filter-hidden", !shouldShow);
+        });
+
+        document.querySelectorAll(".js-place-row").forEach(function (item) {
+            const shouldShow = isAll || String(item.dataset.day) === String(day);
+            item.classList.toggle("is-filter-hidden", !shouldShow);
+        });
+    }
+
+    function filterDesktopCards(day) {
+        const isAll = String(day) === "all";
+
+        document.querySelectorAll(".desktop-day-section").forEach(function (section) {
+            const shouldShow = isAll || String(section.dataset.desktopDaySection) === String(day);
+            section.classList.toggle("is-filter-hidden", !shouldShow);
+        });
+    }
+
+    function resetMobileDetailView() {
+        const listView = document.getElementById("mobileRouteListView");
+        const detailView = document.getElementById("mobilePlaceDetailView");
+
+        if (listView) {
+            listView.hidden = false;
+        }
+
+        if (detailView) {
+            detailView.hidden = true;
+        }
+
+        document.querySelectorAll(".mobile-place-detail-card").forEach(function (card) {
+            card.hidden = true;
+        });
+    }
+
+    function closeMobilePlaceDetail() {
+        activePlaceId = null;
+
+        resetMobileDetailView();
+
+        document.querySelectorAll(".route-clickable-place").forEach(function (row) {
+            row.classList.remove("is-active");
+        });
+
+        document.querySelectorAll(".desktop-place-card").forEach(function (card) {
+            card.classList.remove("is-focused");
+        });
+
+        renderAllMaps(activeDay, null);
+    }
+
+    function openMobilePlaceDetail(placeId) {
+        const listView = document.getElementById("mobileRouteListView");
+        const detailView = document.getElementById("mobilePlaceDetailView");
+
+        if (!listView || !detailView) {
+            return;
+        }
+
+        activePlaceId = placeId;
+
+        listView.hidden = true;
+        detailView.hidden = false;
+
+        document.querySelectorAll(".mobile-place-detail-card").forEach(function (card) {
+            card.hidden = String(card.dataset.placeDetailId) !== String(placeId);
+        });
+
+        document.querySelectorAll(".route-clickable-place").forEach(function (row) {
+            row.classList.toggle("is-active", String(row.dataset.placeId) === String(placeId));
+        });
+
+        renderAllMaps(activeDay, placeId);
+
+        const explorer = document.getElementById("mobileRouteExplorer");
+
+        if (explorer) {
+            explorer.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
         }
     }
 
-    renderCourseMap(document.getElementById('course-map'));
-    renderCourseMap(document.getElementById('mobile-course-map'));
+    function scrollDesktopContentToPlace(placeId) {
+        const content = document.getElementById("desktopDetailContent");
+        const target = document.getElementById(`desktop-place-${placeId}`);
 
-    if (slider) {
-        setTimeout(function () {
-            const activeSlide = slider.querySelector(".mobile-route-slide");
-            const activeCard = activeSlide ? activeSlide.querySelector(".mobile-slide-card") : null;
+        if (!content || !target) {
+            return;
+        }
 
-            if (activeCard) {
-                slider.style.height = `${Math.ceil(activeCard.getBoundingClientRect().height) + 8}px`;
-            }
-        }, 500);
+        const contentRect = content.getBoundingClientRect();
+        const targetRect = target.getBoundingClientRect();
+        const nextTop = content.scrollTop + (targetRect.top - contentRect.top) - 16;
+
+        content.scrollTo({
+            top: Math.max(0, nextTop),
+            behavior: "smooth"
+        });
     }
+
+    function focusDesktopPlace(placeId) {
+        activePlaceId = placeId;
+
+        document.querySelectorAll(".desktop-place-card").forEach(function (card) {
+            card.classList.toggle("is-focused", String(card.dataset.placeId) === String(placeId));
+        });
+
+        document.querySelectorAll(".route-clickable-place").forEach(function (row) {
+            row.classList.toggle("is-active", String(row.dataset.placeId) === String(placeId));
+        });
+
+        renderAllMaps(activeDay, placeId);
+        scrollDesktopContentToPlace(placeId);
+    }
+
+    function resetDesktopContentScroll() {
+        const content = document.getElementById("desktopDetailContent");
+
+        if (content) {
+            content.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        }
+    }
+
+    function setActiveDay(day) {
+        activeDay = String(day);
+        activePlaceId = null;
+
+        setActiveTabs(activeDay);
+        filterRouteFlowRows(activeDay);
+        filterDesktopCards(activeDay);
+        resetMobileDetailView();
+        resetDesktopContentScroll();
+
+        document.querySelectorAll(".route-clickable-place").forEach(function (row) {
+            row.classList.remove("is-active");
+        });
+
+        document.querySelectorAll(".desktop-place-card").forEach(function (card) {
+            card.classList.remove("is-focused");
+        });
+
+        renderAllMaps(activeDay, null);
+    }
+
+    document.querySelectorAll(".route-day-tab").forEach(function (button) {
+        button.addEventListener("click", function () {
+            setActiveDay(button.dataset.day || "all");
+        });
+    });
+
+    document.querySelectorAll(".mobile-place-row").forEach(function (row) {
+        row.addEventListener("click", function () {
+            openMobilePlaceDetail(row.dataset.placeId);
+        });
+
+        row.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                openMobilePlaceDetail(row.dataset.placeId);
+            }
+        });
+    });
+
+    function activateDesktopPlaceRow(row) {
+        const placeDay = row.dataset.day || "all";
+
+        if (activeDay !== "all" && activeDay !== placeDay) {
+            setActiveDay(placeDay);
+        }
+
+        focusDesktopPlace(row.dataset.placeId);
+    }
+
+    document.querySelectorAll(".desktop-place-row").forEach(function (row) {
+        row.addEventListener("click", function () {
+            activateDesktopPlaceRow(row);
+        });
+
+        row.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                activateDesktopPlaceRow(row);
+            }
+        });
+    });
+
+    const mobilePlaceBackBtn = document.getElementById("mobilePlaceBackBtn");
+
+    if (mobilePlaceBackBtn) {
+        mobilePlaceBackBtn.addEventListener("click", closeMobilePlaceDetail);
+    }
+
+    window.addEventListener("resize", function () {
+        window.clearTimeout(resizeTimer);
+
+        resizeTimer = window.setTimeout(function () {
+            relayoutExistingMaps();
+        }, 160);
+    });
+
+    setActiveDay("all");
 });
 </script>
+
+
 {% endblock %}
