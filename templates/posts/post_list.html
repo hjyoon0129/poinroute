@@ -657,15 +657,42 @@
     }
 
     /* =========================================================
-       최신 iPhone Safari 강제 보정
-       - 첫페이지 검색 필터는 모바일에서 custom select를 쓰지 않고 native select만 사용
+       모바일 검색 필터 select 최적화
+       - native select의 투박한 바 대신 예쁜 compact select 버튼 유지
+       - 실제 목록은 body/dialog top layer 바텀시트로 띄워 iPhone Safari 레이어 버그 방지
        ========================================================= */
     @media (max-width: 1024px), (hover: none) and (pointer: coarse) {
         .post-list-page .pretty-select,
         .poinroute-search-panel .pretty-select {
-            display: none !important;
-            visibility: hidden !important;
-            pointer-events: none !important;
+            display: block !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        .post-list-page .pretty-select-button,
+        .poinroute-search-panel .pretty-select-button {
+            width: 100% !important;
+            height: 46px !important;
+            min-height: 46px !important;
+            padding: 0 34px 0 13px !important;
+            border: 1px solid #c7d0df !important;
+            border-radius: 14px !important;
+            background: #ffffff !important;
+            color: #111827 !important;
+            font-size: 15px !important;
+            font-weight: 850 !important;
+            line-height: 1 !important;
+            text-align: left !important;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035) !important;
+            -webkit-tap-highlight-color: transparent !important;
+            touch-action: manipulation !important;
+        }
+
+        .post-list-page .pretty-select-button[data-empty="true"],
+        .poinroute-search-panel .pretty-select-button[data-empty="true"] {
+            color: #8d98aa !important;
         }
 
         .post-list-page .pretty-menu,
@@ -679,31 +706,25 @@
         .poinroute-search-panel select.custom-select.native-select-hidden,
         .poinroute-search-panel select.hero-select,
         .poinroute-search-panel select.hero-select.native-select-hidden {
-            position: relative !important;
+            position: absolute !important;
             display: block !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-            pointer-events: auto !important;
-            clip: auto !important;
-            clip-path: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            clip: rect(0, 0, 0, 0) !important;
+            clip-path: inset(50%) !important;
             transform: none !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-            height: 50px !important;
-            min-height: 50px !important;
-            padding: 0 36px 0 13px !important;
-            border: 1px solid #c7d0df !important;
-            border-radius: 14px !important;
-            background-color: #ffffff !important;
-            color: #111827 !important;
-            font-size: 16px !important;
-            font-weight: 850 !important;
-            line-height: normal !important;
-            overflow: visible !important;
-            z-index: 100 !important;
-            -webkit-appearance: menulist-button !important;
-            appearance: auto !important;
+            width: 1px !important;
+            max-width: 1px !important;
+            min-width: 1px !important;
+            height: 1px !important;
+            min-height: 1px !important;
+            padding: 0 !important;
+            border: 0 !important;
+            overflow: hidden !important;
+            z-index: -1 !important;
+            -webkit-appearance: none !important;
+            appearance: none !important;
         }
 
         .poinroute-search-panel,

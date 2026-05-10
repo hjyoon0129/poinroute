@@ -129,31 +129,24 @@
     }
 
     function shouldUseMobileSelectSheet() {
+        return isTouchMobileViewport();
+    }
+
+    function shouldUseNativeSelect() {
         /*
-         * 예전에는 모바일에서 dialog 기반 커스텀 셀렉트 시트를 사용했다.
-         * 하지만 iPhone/Safari/Android WebView에서 sticky, transform, backdrop-filter,
-         * visualViewport 이벤트가 겹치면 터치 지연 또는 미동작이 종종 발생했다.
-         * 이제 모바일/터치 환경에서는 네이티브 select만 사용한다.
+         * 최신 iPhone에서 네이티브 select는 안정적이지만 화면 전체 선택창이 떠서 UX가 부담스럽다.
+         * 그래서 모바일에서는 네이티브 select가 아니라 body/dialog 기반의 작은 선택 바텀시트를 사용한다.
          */
         return false;
     }
 
-    function shouldUseNativeSelect() {
-        return isTouchMobileViewport();
-    }
-
     function syncNativeSelectMode() {
-        const useNative = shouldUseNativeSelect();
+        const useMobileSheet = shouldUseMobileSelectSheet();
 
-        document.documentElement.classList.toggle('pr-native-select-mode', useNative);
-        document.body?.classList.toggle('pr-native-select-mode', useNative);
-        document.documentElement.classList.remove('pr-mobile-select-mode');
-        document.body?.classList.remove('pr-mobile-select-mode');
-
-        if (useNative) {
-            enableNativeSelects(document);
-            return;
-        }
+        document.documentElement.classList.toggle('pr-mobile-select-mode', useMobileSheet);
+        document.body?.classList.toggle('pr-mobile-select-mode', useMobileSheet);
+        document.documentElement.classList.remove('pr-native-select-mode');
+        document.body?.classList.remove('pr-native-select-mode');
 
         qsa('select.custom-select').forEach(function (select) {
             select.classList.remove('ios-native-select', 'mobile-native-select');
@@ -165,10 +158,7 @@
         syncNativeSelectMode();
         closeAllPrettySelects();
         closeMobileSelectSheet();
-
-        if (!shouldUseNativeSelect()) {
-            initPrettySelects(document);
-        }
+        initPrettySelects(document);
     }
 
     function debounce(fn, delay) {
@@ -466,11 +456,6 @@
     }
 
     function initPrettySelects(scope = document) {
-        if (shouldUseNativeSelect()) {
-            enableNativeSelects(scope);
-            return;
-        }
-
         qsa('select.custom-select', scope).forEach(function (select) {
             select.classList.remove('ios-native-select', 'mobile-native-select');
             delete select.dataset.prettyNative;
@@ -515,8 +500,8 @@
 
                 closeAllPrettySelects();
 
-                if (shouldUseNativeSelect()) {
-                    select.focus();
+                if (shouldUseMobileSelectSheet()) {
+                    openMobileSelectSheet(select);
                     return;
                 }
 
@@ -567,9 +552,6 @@
             select.style.height = '';
             select.style.visibility = '';
             select.style.clip = '';
-            select.style.clipPath = '';
-            select.style.overflow = '';
-            select.style.transform = '';
         });
     }
 

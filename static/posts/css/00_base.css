@@ -1362,76 +1362,176 @@ body:has(.nickname-modal-backdrop) {
 }
 
 /* =========================================================
-   Mobile native select stability patch
-   - 모바일/터치 환경에서는 JS 커스텀 select/dialog 대신 OS native select 사용
-   - Safari/Android WebView에서 드롭다운 터치 지연, 미동작, 레이어 갇힘 방지
+   Poinroute mobile compact select final patch
+   - 모바일에서는 네이티브 select 대신 작고 예쁜 바텀시트 select 사용
+   - 최신 iPhone Safari에서 부모 컨테이너/overflow에 갇히지 않도록 dialog top layer 사용
    ========================================================= */
 @media (max-width: 1024px), (hover: none) and (pointer: coarse) {
-    html.pr-native-select-mode .pretty-select,
-    body.pr-native-select-mode .pretty-select,
-    html.pr-native-select-mode .pretty-menu,
-    body.pr-native-select-mode .pretty-menu,
-    html.pr-native-select-mode .pr-mobile-select-dialog,
-    body.pr-native-select-mode .pr-mobile-select-dialog {
+    html.pr-mobile-select-mode select.custom-select.native-select-hidden,
+    body.pr-mobile-select-mode select.custom-select.native-select-hidden,
+    html.pr-mobile-select-mode select.hero-select.native-select-hidden,
+    body.pr-mobile-select-mode select.hero-select.native-select-hidden,
+    .poinroute-search-panel select.custom-select.native-select-hidden,
+    .poinroute-search-panel select.hero-select.native-select-hidden {
+        position: absolute !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        width: 1px !important;
+        height: 1px !important;
+        min-width: 1px !important;
+        min-height: 1px !important;
+        clip: rect(0, 0, 0, 0) !important;
+        clip-path: inset(50%) !important;
+        overflow: hidden !important;
+        transform: none !important;
+        -webkit-appearance: none !important;
+        appearance: none !important;
+    }
+
+    html.pr-mobile-select-mode .pretty-select,
+    body.pr-mobile-select-mode .pretty-select,
+    .poinroute-search-panel .pretty-select,
+    .post-list-page .pretty-select,
+    .form-shell .pretty-select {
+        display: block !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    html.pr-mobile-select-mode .pretty-select-button,
+    body.pr-mobile-select-mode .pretty-select-button,
+    .poinroute-search-panel .pretty-select-button,
+    .post-list-page .pretty-select-button,
+    .form-shell .pretty-select-button {
+        width: 100% !important;
+        min-height: 46px !important;
+        height: 46px !important;
+        padding: 0 34px 0 13px !important;
+        border: 1px solid #c7d0df !important;
+        border-radius: 14px !important;
+        background: #ffffff !important;
+        color: #111827 !important;
+        font-size: 15px !important;
+        font-weight: 850 !important;
+        line-height: 1 !important;
+        text-align: left !important;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035) !important;
+        -webkit-tap-highlight-color: transparent !important;
+        touch-action: manipulation !important;
+    }
+
+    html.pr-mobile-select-mode .pretty-select-button[data-empty="true"],
+    body.pr-mobile-select-mode .pretty-select-button[data-empty="true"] {
+        color: #8d98aa !important;
+    }
+
+    /* 모바일에서는 body/dialog 시트를 쓰므로 PC용 fixed menu는 표시하지 않음 */
+    html.pr-mobile-select-mode .pretty-menu,
+    body.pr-mobile-select-mode .pretty-menu,
+    .pretty-menu.pretty-menu-portal {
         display: none !important;
         visibility: hidden !important;
         pointer-events: none !important;
     }
 
-    html.pr-native-select-mode select.custom-select,
-    body.pr-native-select-mode select.custom-select,
-    html.pr-native-select-mode select.hero-select,
-    body.pr-native-select-mode select.hero-select,
-    html.pr-native-select-mode select.custom-select.native-select-hidden,
-    body.pr-native-select-mode select.custom-select.native-select-hidden,
-    html.pr-native-select-mode select.hero-select.native-select-hidden,
-    body.pr-native-select-mode select.hero-select.native-select-hidden {
-        position: relative !important;
-        display: block !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-        pointer-events: auto !important;
-        clip: auto !important;
-        clip-path: none !important;
-        transform: none !important;
+    .poinroute-search-panel,
+    .poinroute-search-panel.optimized-search,
+    .poinroute-box,
+    .search-group,
+    .origin-select-row,
+    .poinroute-origin-row,
+    .theme-select-row,
+    .keyword-search-row,
+    .form-shell,
+    .form-grid,
+    .field-box {
         overflow: visible !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        height: 50px !important;
-        min-height: 50px !important;
-        padding: 0 38px 0 13px !important;
-        border: 1px solid #c7d0df !important;
-        border-radius: 14px !important;
-        background-color: #ffffff !important;
-        color: #111827 !important;
-        font-size: 16px !important;
-        font-weight: 850 !important;
-        line-height: normal !important;
-        z-index: 5 !important;
-        cursor: pointer !important;
-        -webkit-appearance: menulist-button !important;
-        appearance: auto !important;
-        touch-action: manipulation !important;
-        -webkit-tap-highlight-color: transparent !important;
+    }
+}
+
+.pr-mobile-select-dialog {
+    position: fixed !important;
+    inset: auto 12px calc(env(safe-area-inset-bottom, 0px) + 12px) 12px !important;
+    width: min(336px, calc(100vw - 28px)) !important;
+    max-width: calc(100vw - 28px) !important;
+    max-height: min(50vh, 360px) !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 22px !important;
+    background: transparent !important;
+    overflow: visible !important;
+    z-index: 2147483647 !important;
+}
+
+.pr-mobile-select-card {
+    width: 100% !important;
+    max-height: min(50vh, 360px) !important;
+    padding: 10px !important;
+    border-radius: 22px !important;
+    background: rgba(255, 255, 255, 0.99) !important;
+    border: 1px solid rgba(226, 232, 240, 0.96) !important;
+    box-shadow: 0 22px 62px rgba(15, 23, 42, 0.24) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+.pr-mobile-select-head {
+    min-height: 40px !important;
+    padding: 2px 2px 8px 8px !important;
+    border-bottom: 1px solid #eef1f6 !important;
+}
+
+.pr-mobile-select-title {
+    font-size: 15px !important;
+    font-weight: 950 !important;
+}
+
+.pr-mobile-select-close {
+    width: 32px !important;
+    height: 32px !important;
+    flex: 0 0 32px !important;
+    border-radius: 12px !important;
+    font-size: 21px !important;
+}
+
+.pr-mobile-select-options {
+    max-height: min(38vh, 275px) !important;
+    padding: 7px 0 0 !important;
+}
+
+.pr-mobile-select-option {
+    min-height: 40px !important;
+    padding: 0 11px !important;
+    border-radius: 13px !important;
+    font-size: 14px !important;
+    font-weight: 850 !important;
+}
+
+.pr-mobile-select-option + .pr-mobile-select-option {
+    margin-top: 3px !important;
+}
+
+@media (max-width: 380px) {
+    .pr-mobile-select-dialog {
+        left: 10px !important;
+        right: 10px !important;
+        width: calc(100vw - 20px) !important;
+        max-width: calc(100vw - 20px) !important;
     }
 
-    html.pr-native-select-mode .poinroute-search-panel,
-    body.pr-native-select-mode .poinroute-search-panel,
-    html.pr-native-select-mode .poinroute-box,
-    body.pr-native-select-mode .poinroute-box,
-    html.pr-native-select-mode .search-group,
-    body.pr-native-select-mode .search-group,
-    html.pr-native-select-mode .origin-select-row,
-    body.pr-native-select-mode .origin-select-row,
-    html.pr-native-select-mode .poinroute-origin-row,
-    body.pr-native-select-mode .poinroute-origin-row,
-    html.pr-native-select-mode .form-shell,
-    body.pr-native-select-mode .form-shell,
-    html.pr-native-select-mode .form-grid,
-    body.pr-native-select-mode .form-grid,
-    html.pr-native-select-mode .field-box,
-    body.pr-native-select-mode .field-box {
-        overflow: visible !important;
+    .pr-mobile-select-card {
+        border-radius: 20px !important;
+        padding: 9px !important;
+    }
+
+    .pr-mobile-select-option {
+        min-height: 38px !important;
+        font-size: 13.5px !important;
     }
 }
