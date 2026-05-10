@@ -128,27 +128,37 @@
         return (maxTouchPoints > 0 || coarsePointer) && (mobileViewport || mobileUA || isIOSDevice());
     }
 
-    function shouldUseNativeSelect() {
+    function shouldUseMobileSelectSheet() {
         return isTouchMobileViewport();
     }
 
+    function shouldUseNativeSelect() {
+        /*
+         * 최신 iPhone에서 네이티브 select는 안정적이지만 화면 전체 선택창이 떠서 UX가 부담스럽다.
+         * 그래서 모바일에서는 네이티브 select가 아니라 body/dialog 기반의 작은 선택 바텀시트를 사용한다.
+         */
+        return false;
+    }
+
     function syncNativeSelectMode() {
-        const useNative = shouldUseNativeSelect();
+        const useMobileSheet = shouldUseMobileSelectSheet();
 
-        document.documentElement.classList.toggle('pr-native-select-mode', useNative);
-        document.body?.classList.toggle('pr-native-select-mode', useNative);
+        document.documentElement.classList.toggle('pr-mobile-select-mode', useMobileSheet);
+        document.body?.classList.toggle('pr-mobile-select-mode', useMobileSheet);
+        document.documentElement.classList.remove('pr-native-select-mode');
+        document.body?.classList.remove('pr-native-select-mode');
 
-        if (useNative) {
-            enableNativeSelects(document);
-        }
+        qsa('select.custom-select').forEach(function (select) {
+            select.classList.remove('ios-native-select', 'mobile-native-select');
+            delete select.dataset.prettyNative;
+        });
     }
 
     function syncSelectModeAfterViewportChange() {
         syncNativeSelectMode();
-
-        if (!shouldUseNativeSelect()) {
-            initPrettySelects(document);
-        }
+        closeAllPrettySelects();
+        closeMobileSelectSheet();
+        initPrettySelects(document);
     }
 
     function debounce(fn, delay) {
@@ -446,12 +456,6 @@
     }
 
     function initPrettySelects(scope = document) {
-        if (shouldUseNativeSelect()) {
-            closeAllPrettySelects();
-            enableNativeSelects(scope);
-            return;
-        }
-
         qsa('select.custom-select', scope).forEach(function (select) {
             select.classList.remove('ios-native-select', 'mobile-native-select');
             delete select.dataset.prettyNative;
@@ -495,6 +499,11 @@
                 const isOpen = wrapper.classList.contains('open');
 
                 closeAllPrettySelects();
+
+                if (shouldUseMobileSelectSheet()) {
+                    openMobileSelectSheet(select);
+                    return;
+                }
 
                 if (!isOpen) {
                     openPrettySelect(select);
@@ -595,6 +604,149 @@
             select.__pretty.menu.classList.remove('open', 'open-up');
             select.__pretty.menu.hidden = true;
         });
+    }
+
+
+    let activeMobileSelect = null;
+    let mobileSelectDialog = null;
+
+    function ensureMobileSelectDialog() {
+        if (mobileSelectDialog) return mobileSelectDialog;
+
+        const dialog = document.createElement('dialog');
+        dialog.className = 'pr-mobile-select-dialog';
+        dialog.innerHTML = `
+            <div class="pr-mobile-select-card">
+                <div class="pr-mobile-select-head">
+                    <strong class="pr-mobile-select-title">선택</strong>
+                    <button type="button" class="pr-mobile-select-close" aria-label="닫기">×</button>
+                </div>
+                <div class="pr-mobile-select-options" role="listbox"></div>
+            </div>
+        `;
+
+        document.body.appendChild(dialog);
+        mobileSelectDialog = dialog;
+
+        const closeBtn = qs('.pr-mobile-select-close', dialog);
+        if (closeBtn) {
+            closeBtn.addEventListener('click', closeMobileSelectSheet);
+        }
+
+        dialog.addEventListener('click', function (event) {
+            const card = qs('.pr-mobile-select-card', dialog);
+            if (!card) return;
+
+            if (!card.contains(event.target)) {
+                closeMobileSelectSheet();
+            }
+        });
+
+        dialog.addEventListener('cancel', function (event) {
+            event.preventDefault();
+            closeMobileSelectSheet();
+        });
+
+        dialog.addEventListener('close', function () {
+            document.body.classList.remove('pr-mobile-select-open');
+            activeMobileSelect = null;
+        });
+
+        return dialog;
+    }
+
+    function getMobileSelectTitle(select) {
+        const group = select.closest('.search-group, .field-box');
+        const groupTitle = group?.querySelector('.search-group-title span, label');
+
+        if (groupTitle?.textContent?.trim()) {
+            return groupTitle.textContent.trim();
+        }
+
+        if (select.id) {
+            const label = document.querySelector(`label[for="${CSS.escape(select.id)}"]`);
+            if (label?.textContent?.trim()) {
+                return label.textContent.trim();
+            }
+        }
+
+        return '선택';
+    }
+
+    function openMobileSelectSheet(select) {
+        if (!select) return;
+
+        const dialog = ensureMobileSelectDialog();
+        const title = qs('.pr-mobile-select-title', dialog);
+        const optionsBox = qs('.pr-mobile-select-options', dialog);
+
+        if (!optionsBox) return;
+
+        activeMobileSelect = select;
+        closeAllPrettySelects();
+
+        if (title) {
+            title.textContent = getMobileSelectTitle(select);
+        }
+
+        optionsBox.innerHTML = '';
+
+        Array.from(select.options).forEach(function (option) {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'pr-mobile-select-option';
+            item.textContent = option.textContent;
+            item.setAttribute('role', 'option');
+
+            if (option.value === select.value) {
+                item.classList.add('selected');
+                item.setAttribute('aria-selected', 'true');
+            } else {
+                item.setAttribute('aria-selected', 'false');
+            }
+
+            item.addEventListener('click', function () {
+                if (!activeMobileSelect) return;
+
+                activeMobileSelect.value = option.value;
+                activeMobileSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                activeMobileSelect.dispatchEvent(new Event('input', { bubbles: true }));
+
+                refreshPrettySelect(activeMobileSelect);
+                closeMobileSelectSheet();
+            });
+
+            optionsBox.appendChild(item);
+        });
+
+        document.body.classList.add('pr-mobile-select-open');
+
+        if (typeof dialog.showModal === 'function') {
+            if (!dialog.open) {
+                dialog.showModal();
+            }
+        } else {
+            dialog.hidden = false;
+            dialog.setAttribute('open', '');
+        }
+
+        dialog.classList.add('is-open');
+    }
+
+    function closeMobileSelectSheet() {
+        if (!mobileSelectDialog) return;
+
+        mobileSelectDialog.classList.remove('is-open');
+        document.body.classList.remove('pr-mobile-select-open');
+
+        if (typeof mobileSelectDialog.close === 'function' && mobileSelectDialog.open) {
+            mobileSelectDialog.close();
+        } else {
+            mobileSelectDialog.hidden = true;
+            mobileSelectDialog.removeAttribute('open');
+        }
+
+        activeMobileSelect = null;
     }
 
     function repositionOpenPrettySelect() {
