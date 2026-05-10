@@ -636,6 +636,66 @@ textarea.form-input-clean {
 }
 
 /* =========================================================
+   iPhone Safari native select fallback
+   - iPhone 16 최신 Safari에서 custom/fixed menu가 컨테이너에 갇히는 현상 방지
+   - JS가 ios-native-select 클래스를 붙이면 실제 select를 그대로 보여준다.
+   ========================================================= */
+
+select.custom-select.ios-native-select,
+select.hero-select.ios-native-select,
+.poinroute-search-panel select.ios-native-select {
+    position: relative !important;
+    display: block !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    visibility: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    padding: 0 34px 0 13px !important;
+    border: 1px solid #c7d0df !important;
+    border-radius: 14px !important;
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    font-size: 15px !important;
+    font-weight: 850 !important;
+    line-height: normal !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    -webkit-appearance: menulist-button !important;
+    appearance: auto !important;
+    transform: none !important;
+    clip: auto !important;
+    overflow: visible !important;
+    z-index: 3 !important;
+}
+
+select.custom-select.ios-native-select:focus,
+select.hero-select.ios-native-select:focus,
+.poinroute-search-panel select.ios-native-select:focus {
+    border-color: var(--main-blue) !important;
+    box-shadow: 0 0 0 4px rgba(49, 87, 246, 0.12) !important;
+    outline: none !important;
+}
+
+select.custom-select.ios-native-select + .pretty-select,
+select.hero-select.ios-native-select + .pretty-select {
+    display: none !important;
+}
+
+@media (max-width: 900px) {
+    select.custom-select.ios-native-select,
+    select.hero-select.ios-native-select,
+    .poinroute-search-panel select.ios-native-select {
+        font-size: 16px !important;
+        height: 50px !important;
+        min-height: 50px !important;
+    }
+}
+
+/* =========================================================
    Nickname modal
    ========================================================= */
 

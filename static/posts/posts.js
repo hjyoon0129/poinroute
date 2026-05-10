@@ -69,6 +69,15 @@
     let marker = null;
     let isMapInitialized = false;
 
+    /*
+     * iPhone 최신 Safari 대응
+     * - iOS Safari는 fixed/portal 레이어도 transform, backdrop-filter, sticky, overflow 조합에서
+     *   간헐적으로 부모 컨테이너 안에 갇혀 보이는 버그가 있다.
+     * - 그래서 iOS 모바일에서는 커스텀 드롭다운을 쓰지 않고 네이티브 select를 강제한다.
+     * - 갤럭시/PC는 기존 예쁜 커스텀 드롭다운 유지.
+     */
+    const FORCE_NATIVE_SELECT_ON_IOS = isIOSDevice();
+
     document.addEventListener('DOMContentLoaded', function () {
         initNavbarShadow();
         initDatePicker();
@@ -85,6 +94,21 @@
 
     function qsa(selector, scope = document) {
         return Array.from(scope.querySelectorAll(selector));
+    }
+
+    function isIOSDevice() {
+        const ua = window.navigator.userAgent || '';
+        const platform = window.navigator.platform || '';
+        const maxTouchPoints = window.navigator.maxTouchPoints || 0;
+
+        return (
+            /iPad|iPhone|iPod/i.test(ua) ||
+            (platform === 'MacIntel' && maxTouchPoints > 1)
+        );
+    }
+
+    function shouldUseNativeSelect() {
+        return FORCE_NATIVE_SELECT_ON_IOS && window.matchMedia('(max-width: 900px)').matches;
     }
 
     function initNavbarShadow() {
@@ -373,6 +397,11 @@
     }
 
     function initPrettySelects(scope = document) {
+        if (shouldUseNativeSelect()) {
+            enableNativeSelects(scope);
+            return;
+        }
+
         qsa('select.custom-select', scope).forEach(function (select) {
             if (select.dataset.prettyReady === '1') {
                 refreshPrettySelect(select);
@@ -445,6 +474,44 @@
                 window.visualViewport.addEventListener('scroll', repositionOpenPrettySelect);
             }
         }
+    }
+
+    function enableNativeSelects(scope = document) {
+        qsa('select.custom-select', scope).forEach(function (select) {
+            cleanupPrettySelect(select);
+
+            select.classList.remove('native-select-hidden');
+            select.classList.add('ios-native-select');
+            select.dataset.prettyNative = '1';
+            select.style.opacity = '';
+            select.style.pointerEvents = '';
+            select.style.position = '';
+            select.style.width = '';
+            select.style.height = '';
+        });
+    }
+
+    function cleanupPrettySelect(select) {
+        if (!select) return;
+
+        if (select.__pretty) {
+            if (select.__pretty.menu && select.__pretty.menu.parentNode) {
+                select.__pretty.menu.parentNode.removeChild(select.__pretty.menu);
+            }
+
+            if (select.__pretty.wrapper && select.__pretty.wrapper.parentNode) {
+                select.__pretty.wrapper.parentNode.removeChild(select.__pretty.wrapper);
+            }
+
+            delete select.__pretty;
+        }
+
+        const next = select.nextElementSibling;
+        if (next && next.classList.contains('pretty-select')) {
+            next.remove();
+        }
+
+        delete select.dataset.prettyReady;
     }
 
     function openPrettySelect(select) {
