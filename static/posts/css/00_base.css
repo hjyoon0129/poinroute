@@ -1360,3 +1360,78 @@ body:has(.nickname-modal-backdrop) {
         padding: 0 16px;
     }
 }
+
+/* =========================================================
+   Mobile native select stability patch
+   - 모바일/터치 환경에서는 JS 커스텀 select/dialog 대신 OS native select 사용
+   - Safari/Android WebView에서 드롭다운 터치 지연, 미동작, 레이어 갇힘 방지
+   ========================================================= */
+@media (max-width: 1024px), (hover: none) and (pointer: coarse) {
+    html.pr-native-select-mode .pretty-select,
+    body.pr-native-select-mode .pretty-select,
+    html.pr-native-select-mode .pretty-menu,
+    body.pr-native-select-mode .pretty-menu,
+    html.pr-native-select-mode .pr-mobile-select-dialog,
+    body.pr-native-select-mode .pr-mobile-select-dialog {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+
+    html.pr-native-select-mode select.custom-select,
+    body.pr-native-select-mode select.custom-select,
+    html.pr-native-select-mode select.hero-select,
+    body.pr-native-select-mode select.hero-select,
+    html.pr-native-select-mode select.custom-select.native-select-hidden,
+    body.pr-native-select-mode select.custom-select.native-select-hidden,
+    html.pr-native-select-mode select.hero-select.native-select-hidden,
+    body.pr-native-select-mode select.hero-select.native-select-hidden {
+        position: relative !important;
+        display: block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        clip: auto !important;
+        clip-path: none !important;
+        transform: none !important;
+        overflow: visible !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        height: 50px !important;
+        min-height: 50px !important;
+        padding: 0 38px 0 13px !important;
+        border: 1px solid #c7d0df !important;
+        border-radius: 14px !important;
+        background-color: #ffffff !important;
+        color: #111827 !important;
+        font-size: 16px !important;
+        font-weight: 850 !important;
+        line-height: normal !important;
+        z-index: 5 !important;
+        cursor: pointer !important;
+        -webkit-appearance: menulist-button !important;
+        appearance: auto !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: transparent !important;
+    }
+
+    html.pr-native-select-mode .poinroute-search-panel,
+    body.pr-native-select-mode .poinroute-search-panel,
+    html.pr-native-select-mode .poinroute-box,
+    body.pr-native-select-mode .poinroute-box,
+    html.pr-native-select-mode .search-group,
+    body.pr-native-select-mode .search-group,
+    html.pr-native-select-mode .origin-select-row,
+    body.pr-native-select-mode .origin-select-row,
+    html.pr-native-select-mode .poinroute-origin-row,
+    body.pr-native-select-mode .poinroute-origin-row,
+    html.pr-native-select-mode .form-shell,
+    body.pr-native-select-mode .form-shell,
+    html.pr-native-select-mode .form-grid,
+    body.pr-native-select-mode .form-grid,
+    html.pr-native-select-mode .field-box,
+    body.pr-native-select-mode .field-box {
+        overflow: visible !important;
+    }
+}
