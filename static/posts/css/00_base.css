@@ -853,9 +853,17 @@ body.pr-mobile-select-mode select.hero-select.native-select-hidden {
     font-weight: 950;
 }
 
+html.pr-mobile-select-open,
 body.pr-mobile-select-open {
     overflow: hidden;
-    touch-action: none;
+    overscroll-behavior: contain;
+}
+
+.pr-mobile-select-dialog.is-open,
+.pr-mobile-select-dialog.is-fallback-open,
+.pr-mobile-select-dialog[open] {
+    display: block;
+    pointer-events: auto;
 }
 
 @media (max-width: 380px) {
@@ -879,6 +887,26 @@ body.pr-mobile-select-open {
         min-height: 44px;
         font-size: 14px;
     }
+}
+
+
+
+/* iPhone Safari: dialog fallback/open 상태에서 터치 이벤트가 죽지 않게 보정 */
+.pr-mobile-select-dialog,
+.pr-mobile-select-card,
+.pr-mobile-select-options,
+.pr-mobile-select-option,
+.pr-mobile-select-close {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.pr-mobile-select-options {
+    touch-action: pan-y;
+}
+
+.pr-mobile-select-option,
+.pr-mobile-select-close {
+    touch-action: manipulation;
 }
 
 /* =========================================================

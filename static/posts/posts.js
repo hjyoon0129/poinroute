@@ -68,6 +68,7 @@
     let map = null;
     let marker = null;
     let isMapInitialized = false;
+    let lastSelectModeIsMobile = null;
 
     /*
      * 모바일 select 안정화 최종 대응
@@ -89,14 +90,39 @@
         initCourseForm();
         initMapModal();
 
-        window.addEventListener('resize', debounce(syncSelectModeAfterViewportChange, 120));
+        lastSelectModeIsMobile = shouldUseMobileSelectSheet();
+
+        /*
+         * iPhone Safari 안정화 핵심
+         * visualViewport resize는 주소창 접힘/펼침만으로도 자주 발생한다.
+         * 여기서 select를 닫거나 재초기화하면 방금 누른 드롭다운이 바로 닫혀
+         * '가끔 먹통'처럼 보일 수 있으므로, 실제 모바일/PC 모드가 바뀔 때만 재초기화한다.
+         */
+        window.addEventListener('resize', debounce(handleSelectViewportChange, 180), { passive: true });
         window.addEventListener('orientationchange', function () {
-            setTimeout(syncSelectModeAfterViewportChange, 180);
+            setTimeout(forceSelectModeRefresh, 260);
         });
 
         if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', debounce(syncSelectModeAfterViewportChange, 120));
+            window.visualViewport.addEventListener('resize', debounce(function () {
+                if (!shouldUseMobileSelectSheet()) {
+                    repositionOpenPrettySelect();
+                }
+            }, 120), { passive: true });
+
+            window.visualViewport.addEventListener('scroll', function () {
+                if (!shouldUseMobileSelectSheet()) {
+                    repositionOpenPrettySelect();
+                }
+            }, { passive: true });
         }
+
+        window.addEventListener('pageshow', cleanupStaleMobileSelectState, { passive: true });
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) {
+                cleanupStaleMobileSelectState();
+            }
+        });
     });
 
     function qs(selector, scope = document) {
@@ -154,11 +180,41 @@
         });
     }
 
-    function syncSelectModeAfterViewportChange() {
+    function handleSelectViewportChange() {
+        const currentMobileMode = shouldUseMobileSelectSheet();
+
+        if (lastSelectModeIsMobile === null) {
+            lastSelectModeIsMobile = currentMobileMode;
+        }
+
+        if (currentMobileMode !== lastSelectModeIsMobile) {
+            forceSelectModeRefresh();
+            return;
+        }
+
+        if (!currentMobileMode) {
+            repositionOpenPrettySelect();
+        }
+    }
+
+    function forceSelectModeRefresh() {
+        lastSelectModeIsMobile = shouldUseMobileSelectSheet();
         syncNativeSelectMode();
         closeAllPrettySelects();
         closeMobileSelectSheet();
         initPrettySelects(document);
+    }
+
+    function syncSelectModeAfterViewportChange() {
+        forceSelectModeRefresh();
+    }
+
+    function cleanupStaleMobileSelectState() {
+        if (!mobileSelectDialog || !mobileSelectDialog.open) {
+            document.body?.classList.remove('pr-mobile-select-open');
+            document.documentElement?.classList.remove('pr-mobile-select-open');
+            activeMobileSelect = null;
+        }
     }
 
     function debounce(fn, delay) {
@@ -496,6 +552,8 @@
                 event.preventDefault();
                 event.stopPropagation();
 
+                if (select.disabled) return;
+
                 const isOpen = wrapper.classList.contains('open');
 
                 closeAllPrettySelects();
@@ -609,6 +667,7 @@
 
     let activeMobileSelect = null;
     let mobileSelectDialog = null;
+    let mobileSelectOpenLock = false;
 
     function ensureMobileSelectDialog() {
         if (mobileSelectDialog) return mobileSelectDialog;
@@ -649,7 +708,9 @@
 
         dialog.addEventListener('close', function () {
             document.body.classList.remove('pr-mobile-select-open');
+            document.documentElement.classList.remove('pr-mobile-select-open');
             activeMobileSelect = null;
+            mobileSelectOpenLock = false;
         });
 
         return dialog;
@@ -674,7 +735,17 @@
     }
 
     function openMobileSelectSheet(select) {
-        if (!select) return;
+        if (!select || select.disabled) return;
+
+        /*
+         * 빠른 연타 / Safari dialog 전환 중복 방지.
+         * 너무 길게 잠그면 먹통처럼 보이므로 120ms만 잠근다.
+         */
+        if (mobileSelectOpenLock) return;
+        mobileSelectOpenLock = true;
+        window.setTimeout(function () {
+            mobileSelectOpenLock = false;
+        }, 120);
 
         const dialog = ensureMobileSelectDialog();
         const title = qs('.pr-mobile-select-title', dialog);
@@ -705,7 +776,10 @@
                 item.setAttribute('aria-selected', 'false');
             }
 
-            item.addEventListener('click', function () {
+            item.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+
                 if (!activeMobileSelect) return;
 
                 activeMobileSelect.value = option.value;
@@ -720,33 +794,57 @@
         });
 
         document.body.classList.add('pr-mobile-select-open');
+        document.documentElement.classList.add('pr-mobile-select-open');
 
-        if (typeof dialog.showModal === 'function') {
-            if (!dialog.open) {
-                dialog.showModal();
+        try {
+            dialog.hidden = false;
+
+            if (typeof dialog.showModal === 'function') {
+                if (!dialog.open) {
+                    dialog.showModal();
+                }
+            } else {
+                dialog.setAttribute('open', '');
             }
-        } else {
+
+            dialog.classList.add('is-open');
+        } catch (error) {
+            /*
+             * 일부 iOS Safari/WebView에서 showModal 전환 중 InvalidStateError가 날 수 있다.
+             * 이때 body lock만 남으면 페이지가 먹통처럼 보이므로 non-modal fallback으로 연다.
+             */
             dialog.hidden = false;
             dialog.setAttribute('open', '');
+            dialog.classList.add('is-open', 'is-fallback-open');
         }
-
-        dialog.classList.add('is-open');
     }
 
     function closeMobileSelectSheet() {
-        if (!mobileSelectDialog) return;
+        if (!mobileSelectDialog) {
+            document.body?.classList.remove('pr-mobile-select-open');
+            document.documentElement?.classList.remove('pr-mobile-select-open');
+            activeMobileSelect = null;
+            return;
+        }
 
-        mobileSelectDialog.classList.remove('is-open');
+        mobileSelectDialog.classList.remove('is-open', 'is-fallback-open');
         document.body.classList.remove('pr-mobile-select-open');
+        document.documentElement.classList.remove('pr-mobile-select-open');
 
-        if (typeof mobileSelectDialog.close === 'function' && mobileSelectDialog.open) {
-            mobileSelectDialog.close();
-        } else {
+        try {
+            if (typeof mobileSelectDialog.close === 'function' && mobileSelectDialog.open) {
+                mobileSelectDialog.close();
+            } else {
+                mobileSelectDialog.hidden = true;
+                mobileSelectDialog.removeAttribute('open');
+            }
+        } catch (error) {
             mobileSelectDialog.hidden = true;
             mobileSelectDialog.removeAttribute('open');
         }
 
         activeMobileSelect = null;
+        mobileSelectOpenLock = false;
     }
 
     function repositionOpenPrettySelect() {
