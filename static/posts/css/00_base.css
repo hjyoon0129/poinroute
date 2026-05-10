@@ -695,6 +695,99 @@ select.hero-select.ios-native-select + .pretty-select {
     }
 }
 
+
+
+/* =========================================================
+   Mobile / latest iPhone hard fallback
+   - 모바일 터치 화면에서는 JS 감지 실패나 캐시가 있어도 custom dropdown을 강제로 끈다.
+   - 원래 select를 다시 보이게 해서 iOS Safari 기본 선택 UI가 뜨게 한다.
+   ========================================================= */
+
+@media (max-width: 1024px), (hover: none) and (pointer: coarse) {
+    html.pr-native-select-mode .pretty-select,
+    body.pr-native-select-mode .pretty-select,
+    .poinroute-search-panel .pretty-select,
+    .form-shell .pretty-select,
+    .post-list-page .pretty-select {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+
+    html.pr-native-select-mode .pretty-menu,
+    body.pr-native-select-mode .pretty-menu,
+    .pretty-menu.pretty-menu-portal {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+
+    select.custom-select,
+    select.custom-select.native-select-hidden,
+    select.hero-select,
+    select.hero-select.native-select-hidden,
+    select.custom-select.ios-native-select,
+    select.custom-select.mobile-native-select,
+    select.hero-select.ios-native-select,
+    select.hero-select.mobile-native-select,
+    .poinroute-search-panel select,
+    .poinroute-search-panel select.native-select-hidden,
+    .form-shell select.custom-select,
+    .form-shell select.custom-select.native-select-hidden {
+        position: relative !important;
+        display: block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        clip: auto !important;
+        clip-path: none !important;
+        transform: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        height: 50px !important;
+        min-height: 50px !important;
+        padding: 0 36px 0 13px !important;
+        margin: 0 !important;
+        border: 1px solid #c7d0df !important;
+        border-radius: 14px !important;
+        background-color: #ffffff !important;
+        color: #111827 !important;
+        font-size: 16px !important;
+        font-weight: 850 !important;
+        line-height: normal !important;
+        box-shadow: none !important;
+        cursor: pointer !important;
+        overflow: visible !important;
+        z-index: 50 !important;
+        -webkit-appearance: menulist-button !important;
+        appearance: auto !important;
+    }
+
+    select.custom-select:focus,
+    select.hero-select:focus,
+    .poinroute-search-panel select:focus,
+    .form-shell select.custom-select:focus {
+        border-color: var(--main-blue) !important;
+        box-shadow: 0 0 0 4px rgba(49, 87, 246, 0.12) !important;
+        outline: none !important;
+    }
+
+    .poinroute-search-panel,
+    .poinroute-search-panel.optimized-search,
+    .poinroute-box,
+    .search-group,
+    .origin-select-row,
+    .poinroute-origin-row,
+    .theme-select-row,
+    .keyword-search-row,
+    .form-shell,
+    .form-grid,
+    .field-box {
+        overflow: visible !important;
+    }
+}
+
 /* =========================================================
    Nickname modal
    ========================================================= */

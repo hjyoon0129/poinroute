@@ -655,6 +655,67 @@
             font-size: 14px;
         }
     }
+
+    /* =========================================================
+       최신 iPhone Safari 강제 보정
+       - 첫페이지 검색 필터는 모바일에서 custom select를 쓰지 않고 native select만 사용
+       ========================================================= */
+    @media (max-width: 1024px), (hover: none) and (pointer: coarse) {
+        .post-list-page .pretty-select,
+        .poinroute-search-panel .pretty-select {
+            display: none !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+
+        .post-list-page .pretty-menu,
+        .poinroute-search-panel .pretty-menu {
+            display: none !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+
+        .poinroute-search-panel select.custom-select,
+        .poinroute-search-panel select.custom-select.native-select-hidden,
+        .poinroute-search-panel select.hero-select,
+        .poinroute-search-panel select.hero-select.native-select-hidden {
+            position: relative !important;
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+            clip: auto !important;
+            clip-path: none !important;
+            transform: none !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            height: 50px !important;
+            min-height: 50px !important;
+            padding: 0 36px 0 13px !important;
+            border: 1px solid #c7d0df !important;
+            border-radius: 14px !important;
+            background-color: #ffffff !important;
+            color: #111827 !important;
+            font-size: 16px !important;
+            font-weight: 850 !important;
+            line-height: normal !important;
+            overflow: visible !important;
+            z-index: 100 !important;
+            -webkit-appearance: menulist-button !important;
+            appearance: auto !important;
+        }
+
+        .poinroute-search-panel,
+        .poinroute-search-panel.optimized-search,
+        .poinroute-box,
+        .origin-select-row,
+        .poinroute-origin-row,
+        .search-group {
+            overflow: visible !important;
+        }
+    }
+
 </style>
 
 <script>

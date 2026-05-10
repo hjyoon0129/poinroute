@@ -70,15 +70,17 @@
     let isMapInitialized = false;
 
     /*
-     * iPhone 최신 Safari 대응
-     * - iOS Safari는 fixed/portal 레이어도 transform, backdrop-filter, sticky, overflow 조합에서
-     *   간헐적으로 부모 컨테이너 안에 갇혀 보이는 버그가 있다.
-     * - 그래서 iOS 모바일에서는 커스텀 드롭다운을 쓰지 않고 네이티브 select를 강제한다.
-     * - 갤럭시/PC는 기존 예쁜 커스텀 드롭다운 유지.
+     * 모바일 select 안정화 최종 대응
+     * - 최신 iPhone Safari는 fixed/portal 레이어도 transform, backdrop-filter, sticky, overflow 조합에서
+     *   커스텀 메뉴가 부모 컨테이너 안에 갇히는 버그가 발생할 수 있다.
+     * - UA 감지에만 의존하면 최신 기기/브라우저에서 실패할 수 있으므로
+     *   모바일 크기 + 터치 포인터 조건에서는 커스텀 select를 아예 만들지 않는다.
+     * - PC에서는 기존 예쁜 커스텀 드롭다운 유지.
      */
-    const FORCE_NATIVE_SELECT_ON_IOS = isIOSDevice();
+    const MOBILE_SELECT_MEDIA = '(max-width: 1024px), (hover: none) and (pointer: coarse)';
 
     document.addEventListener('DOMContentLoaded', function () {
+        syncNativeSelectMode();
         initNavbarShadow();
         initDatePicker();
         initFormRegionSelectors();
@@ -86,6 +88,15 @@
         initPrettySelects();
         initCourseForm();
         initMapModal();
+
+        window.addEventListener('resize', debounce(syncSelectModeAfterViewportChange, 120));
+        window.addEventListener('orientationchange', function () {
+            setTimeout(syncSelectModeAfterViewportChange, 180);
+        });
+
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', debounce(syncSelectModeAfterViewportChange, 120));
+        }
     });
 
     function qs(selector, scope = document) {
@@ -107,8 +118,46 @@
         );
     }
 
+    function isTouchMobileViewport() {
+        const ua = window.navigator.userAgent || '';
+        const maxTouchPoints = window.navigator.maxTouchPoints || 0;
+        const coarsePointer = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+        const mobileViewport = window.matchMedia('(max-width: 1024px)').matches;
+        const mobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua);
+
+        return (maxTouchPoints > 0 || coarsePointer) && (mobileViewport || mobileUA || isIOSDevice());
+    }
+
     function shouldUseNativeSelect() {
-        return FORCE_NATIVE_SELECT_ON_IOS && window.matchMedia('(max-width: 900px)').matches;
+        return isTouchMobileViewport();
+    }
+
+    function syncNativeSelectMode() {
+        const useNative = shouldUseNativeSelect();
+
+        document.documentElement.classList.toggle('pr-native-select-mode', useNative);
+        document.body?.classList.toggle('pr-native-select-mode', useNative);
+
+        if (useNative) {
+            enableNativeSelects(document);
+        }
+    }
+
+    function syncSelectModeAfterViewportChange() {
+        syncNativeSelectMode();
+
+        if (!shouldUseNativeSelect()) {
+            initPrettySelects(document);
+        }
+    }
+
+    function debounce(fn, delay) {
+        let timer = null;
+
+        return function () {
+            window.clearTimeout(timer);
+            timer = window.setTimeout(fn, delay);
+        };
     }
 
     function initNavbarShadow() {
@@ -398,11 +447,15 @@
 
     function initPrettySelects(scope = document) {
         if (shouldUseNativeSelect()) {
+            closeAllPrettySelects();
             enableNativeSelects(scope);
             return;
         }
 
         qsa('select.custom-select', scope).forEach(function (select) {
+            select.classList.remove('ios-native-select', 'mobile-native-select');
+            delete select.dataset.prettyNative;
+
             if (select.dataset.prettyReady === '1') {
                 refreshPrettySelect(select);
                 return;
@@ -481,13 +534,15 @@
             cleanupPrettySelect(select);
 
             select.classList.remove('native-select-hidden');
-            select.classList.add('ios-native-select');
+            select.classList.add('ios-native-select', 'mobile-native-select');
             select.dataset.prettyNative = '1';
             select.style.opacity = '';
             select.style.pointerEvents = '';
             select.style.position = '';
             select.style.width = '';
             select.style.height = '';
+            select.style.visibility = '';
+            select.style.clip = '';
         });
     }
 
@@ -723,8 +778,9 @@
         });
 
         qsa('select', card).forEach(function (select) {
-            select.classList.remove('native-select-hidden');
+            select.classList.remove('native-select-hidden', 'ios-native-select', 'mobile-native-select');
             delete select.dataset.prettyReady;
+            delete select.dataset.prettyNative;
         });
 
         card.innerHTML = card.innerHTML
