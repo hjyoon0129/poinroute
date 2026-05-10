@@ -477,6 +477,8 @@ textarea.form-input-clean {
 
 /* =========================================================
    Pretty select
+   - iPhone/Safari 대응: 메뉴를 body portal + fixed 레이어로 띄움
+   - 부모 container/hero/card의 overflow, transform, backdrop-filter에 갇히지 않음
    ========================================================= */
 
 .native-select-hidden {
@@ -494,7 +496,7 @@ textarea.form-input-clean {
 }
 
 .pretty-select.open {
-    z-index: 9500;
+    z-index: 10000;
 }
 
 .pretty-select-button {
@@ -512,6 +514,9 @@ textarea.form-input-clean {
     box-shadow: none;
     position: relative;
     transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .pretty-select-button:hover {
@@ -547,31 +552,45 @@ textarea.form-input-clean {
 }
 
 .pretty-menu {
-    position: absolute;
-    top: calc(100% + 6px);
+    position: fixed;
+    top: 0;
     left: 0;
-    right: 0;
+    right: auto;
     bottom: auto;
-    z-index: 9501;
+    z-index: 100000;
+    width: 240px;
     max-height: 248px;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     padding: 6px;
     border-radius: 13px;
-    background: #fff;
+    background: #ffffff;
     border: 1px solid var(--line);
-    box-shadow: 0 18px 42px rgba(17, 24, 39, 0.14);
+    box-shadow: 0 22px 52px rgba(17, 24, 39, 0.20);
     display: none;
+    box-sizing: border-box;
+    transform: translateZ(0);
+    will-change: top, left;
 }
 
-.pretty-select.open .pretty-menu {
+.pretty-menu.open {
     display: block;
+}
+
+.pretty-menu[hidden] {
+    display: none !important;
+}
+
+.pretty-menu.open-up {
+    box-shadow: 0 -18px 48px rgba(17, 24, 39, 0.18);
 }
 
 .pretty-option {
     width: 100% !important;
-    min-height: 36px !important;
-    height: 36px !important;
-    padding: 0 11px !important;
+    min-height: 38px !important;
+    height: auto !important;
+    padding: 9px 11px !important;
     border: 0 !important;
     border-radius: 9px !important;
     background: transparent !important;
@@ -580,11 +599,16 @@ textarea.form-input-clean {
     color: #1f2937 !important;
     font-size: 14px !important;
     font-weight: 650 !important;
+    line-height: 1.25 !important;
     box-shadow: none !important;
     display: block !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
-.pretty-option:hover {
+.pretty-option:hover,
+.pretty-option:active {
     background: #f4f6fb !important;
     color: var(--main-blue) !important;
 }
@@ -593,6 +617,22 @@ textarea.form-input-clean {
     background: var(--soft-blue) !important;
     color: var(--main-blue) !important;
     font-weight: 800 !important;
+}
+
+@media (max-width: 768px) {
+    .pretty-menu {
+        z-index: 100000 !important;
+        max-height: min(280px, 52vh);
+        border-radius: 15px;
+        box-shadow: 0 24px 62px rgba(15, 23, 42, 0.24);
+    }
+
+    .pretty-option {
+        min-height: 42px !important;
+        padding-top: 11px !important;
+        padding-bottom: 11px !important;
+        font-size: 15px !important;
+    }
 }
 
 /* =========================================================

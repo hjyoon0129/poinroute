@@ -388,15 +388,26 @@
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'pretty-select-button';
+            button.setAttribute('aria-haspopup', 'listbox');
+            button.setAttribute('aria-expanded', 'false');
 
             const menu = document.createElement('div');
-            menu.className = 'pretty-menu';
+            menu.className = 'pretty-menu pretty-menu-portal';
+            menu.setAttribute('role', 'listbox');
+            menu.hidden = true;
 
             wrapper.appendChild(button);
-            wrapper.appendChild(menu);
             select.insertAdjacentElement('afterend', wrapper);
+            document.body.appendChild(menu);
+
+            select.__pretty = {
+                wrapper: wrapper,
+                button: button,
+                menu: menu
+            };
 
             button.addEventListener('click', function (event) {
+                event.preventDefault();
                 event.stopPropagation();
 
                 const isOpen = wrapper.classList.contains('open');
@@ -404,11 +415,15 @@
                 closeAllPrettySelects();
 
                 if (!isOpen) {
-                    wrapper.classList.add('open');
+                    openPrettySelect(select);
                 }
             });
 
             wrapper.addEventListener('click', function (event) {
+                event.stopPropagation();
+            });
+
+            menu.addEventListener('click', function (event) {
                 event.stopPropagation();
             });
 
@@ -417,25 +432,133 @@
 
         if (!document.body.dataset.prettyCloseReady) {
             document.body.dataset.prettyCloseReady = '1';
+
             document.addEventListener('click', closeAllPrettySelects);
+            window.addEventListener('resize', repositionOpenPrettySelect);
+            window.addEventListener('orientationchange', function () {
+                setTimeout(repositionOpenPrettySelect, 120);
+            });
+            window.addEventListener('scroll', repositionOpenPrettySelect, true);
+
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', repositionOpenPrettySelect);
+                window.visualViewport.addEventListener('scroll', repositionOpenPrettySelect);
+            }
         }
     }
 
+    function openPrettySelect(select) {
+        if (!select || !select.__pretty) return;
+
+        const pretty = select.__pretty;
+
+        closeAllPrettySelects();
+        refreshPrettySelect(select);
+
+        pretty.wrapper.classList.add('open');
+        pretty.button.setAttribute('aria-expanded', 'true');
+        pretty.menu.hidden = false;
+        pretty.menu.classList.add('open');
+        pretty.menu.dataset.ownerSelectId = select.id || '';
+
+        positionPrettyMenu(select);
+    }
+
     function closeAllPrettySelects() {
-        qsa('.pretty-select.open').forEach(function (wrapper) {
-            wrapper.classList.remove('open');
+        qsa('select.custom-select').forEach(function (select) {
+            if (!select.__pretty) return;
+
+            select.__pretty.wrapper.classList.remove('open');
+            select.__pretty.button.setAttribute('aria-expanded', 'false');
+            select.__pretty.menu.classList.remove('open', 'open-up');
+            select.__pretty.menu.hidden = true;
         });
+    }
+
+    function repositionOpenPrettySelect() {
+        const openWrapper = qs('.pretty-select.open');
+
+        if (!openWrapper) return;
+
+        const select = openWrapper.previousElementSibling;
+
+        if (!select || !select.__pretty) return;
+
+        positionPrettyMenu(select);
+    }
+
+    function positionPrettyMenu(select) {
+        if (!select || !select.__pretty) return;
+
+        const button = select.__pretty.button;
+        const menu = select.__pretty.menu;
+        const rect = button.getBoundingClientRect();
+        const visualViewport = window.visualViewport;
+
+        const viewportLeft = visualViewport ? visualViewport.offsetLeft : 0;
+        const viewportTop = visualViewport ? visualViewport.offsetTop : 0;
+        const viewportWidth = visualViewport ? visualViewport.width : window.innerWidth;
+        const viewportHeight = visualViewport ? visualViewport.height : window.innerHeight;
+
+        const safeGap = 10;
+        const menuGap = 7;
+        const minMenuHeight = 128;
+        const preferredHeight = 248;
+
+        const availableBelow = viewportTop + viewportHeight - rect.bottom - safeGap - menuGap;
+        const availableAbove = rect.top - viewportTop - safeGap - menuGap;
+        const shouldOpenUp = availableBelow < minMenuHeight && availableAbove > availableBelow;
+        const maxHeight = Math.max(
+            minMenuHeight,
+            Math.min(preferredHeight, shouldOpenUp ? availableAbove : availableBelow)
+        );
+
+        let left = rect.left + viewportLeft;
+        let width = rect.width;
+
+        if (width > viewportWidth - (safeGap * 2)) {
+            width = viewportWidth - (safeGap * 2);
+            left = viewportLeft + safeGap;
+        }
+
+        if (left + width > viewportLeft + viewportWidth - safeGap) {
+            left = viewportLeft + viewportWidth - width - safeGap;
+        }
+
+        if (left < viewportLeft + safeGap) {
+            left = viewportLeft + safeGap;
+        }
+
+        menu.style.position = 'fixed';
+        menu.style.left = `${Math.round(left)}px`;
+        menu.style.width = `${Math.round(width)}px`;
+        menu.style.maxHeight = `${Math.round(maxHeight)}px`;
+        menu.style.zIndex = '100000';
+        menu.style.right = 'auto';
+        menu.style.bottom = 'auto';
+
+        if (shouldOpenUp) {
+            menu.classList.add('open-up');
+            menu.style.top = `${Math.round(rect.top + viewportTop - maxHeight - menuGap)}px`;
+        } else {
+            menu.classList.remove('open-up');
+            menu.style.top = `${Math.round(rect.bottom + viewportTop + menuGap)}px`;
+        }
     }
 
     function refreshPrettySelect(select) {
         if (!select) return;
 
-        const wrapper = select.nextElementSibling;
+        const pretty = select.__pretty;
+        const wrapper = pretty?.wrapper || select.nextElementSibling;
+
         if (!wrapper || !wrapper.classList.contains('pretty-select')) return;
 
-        const button = qs('.pretty-select-button', wrapper);
-        const menu = qs('.pretty-menu', wrapper);
+        const button = pretty?.button || qs('.pretty-select-button', wrapper);
+        const menu = pretty?.menu || qs('.pretty-menu', wrapper);
         const selectedOption = select.options[select.selectedIndex] || select.options[0];
+
+        if (!button || !menu) return;
 
         button.textContent = selectedOption ? selectedOption.textContent : '선택';
         button.dataset.empty = select.value ? 'false' : 'true';
@@ -447,9 +570,13 @@
             item.type = 'button';
             item.className = 'pretty-option';
             item.textContent = option.textContent;
+            item.setAttribute('role', 'option');
 
             if (option.value === select.value) {
                 item.classList.add('selected');
+                item.setAttribute('aria-selected', 'true');
+            } else {
+                item.setAttribute('aria-selected', 'false');
             }
 
             item.addEventListener('click', function () {
@@ -463,6 +590,12 @@
 
             menu.appendChild(item);
         });
+
+        if (wrapper.classList.contains('open')) {
+            menu.hidden = false;
+            menu.classList.add('open');
+            positionPrettyMenu(select);
+        }
     }
 
     function initCourseForm() {
