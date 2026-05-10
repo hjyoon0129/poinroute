@@ -111,6 +111,9 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "allauth.account.middleware.AccountMiddleware",
 
+    # 포인루트 방문자/봇/이상유입 기록 및 2차 차단
+    "core.middleware.PoinrouteSecurityMiddleware",
+
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -444,3 +447,11 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
 }
+
+# Poinroute traffic/security logging
+POINROUTE_SECURITY_LOG_ALL_REQUESTS = True
+POINROUTE_SECURITY_LOG_PAGEVIEWS = True
+POINROUTE_SECURITY_LOG_STATIC = False
+
+POINROUTE_SECURITY_LOG_ALL_REQUESTS = False
+POINROUTE_SECURITY_LOG_PAGEVIEWS = True
